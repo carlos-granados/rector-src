@@ -135,11 +135,11 @@ CODE_SAMPLE
 
         $nodes = $this->inlineCodeParser->parseString($content);
 
-        /** @var Expression $expression */
         $expression = $nodes[0];
+        assert($expression instanceof Expression);
 
-        /** @var Assign $assign */
         $assign = $expression->expr;
+        assert($assign instanceof Assign);
 
         $function = $assign->expr;
         if (! $function instanceof Closure) {

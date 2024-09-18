@@ -109,8 +109,8 @@ CODE_SAMPLE
 
         if (! $arrayItem instanceof ArrayItem) {
             $foreachedExpr = $this->nodeFactory->createFuncCall('array_keys', [$eachFuncCall->args[0]]);
-            /** @var ArrayItem $arrayItem */
             $arrayItem = current($list->items);
+            assert($arrayItem instanceof ArrayItem);
             $isTrailingCommaLast = true;
         }
 
@@ -122,8 +122,8 @@ CODE_SAMPLE
 
         // is key included? add it to foreach
         if ($list->items !== []) {
-            /** @var ArrayItem|null $keyItem */
             $keyItem = array_pop($list->items);
+            assert($keyItem instanceof ArrayItem || $keyItem === null);
 
             if ($keyItem instanceof ArrayItem && ! $isTrailingCommaLast) {
                 $foreach->keyVar = $keyItem->value;

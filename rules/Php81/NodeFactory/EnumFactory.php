@@ -140,8 +140,8 @@ final readonly class EnumFactory
         array $mapping = [],
         bool $enumNameInSnakeCase = false,
     ): EnumCase {
-        /** @var MethodTagValueNode $nodeValue */
         $nodeValue = $phpDocTagNode->value;
+        assert($nodeValue instanceof MethodTagValueNode);
         $enumValue = $mapping[$nodeValue->methodName] ?? $nodeValue->methodName;
         if ($enumNameInSnakeCase) {
             $enumName = strtoupper(

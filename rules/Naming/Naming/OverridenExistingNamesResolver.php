@@ -77,8 +77,8 @@ final class OverridenExistingNamesResolver
         $assigns = $this->betterNodeFinder->findInstanceOf((array) $functionLike->stmts, Assign::class);
 
         foreach ($assigns as $assign) {
-            /** @var Variable $assignVariable */
             $assignVariable = $assign->var;
+            assert($assignVariable instanceof Variable);
             $currentVariableName = $this->nodeNameResolver->getName($assignVariable);
             if ($currentVariableName === null) {
                 continue;

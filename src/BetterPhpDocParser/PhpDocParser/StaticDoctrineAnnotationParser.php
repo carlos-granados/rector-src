@@ -74,8 +74,8 @@ final readonly class StaticDoctrineAnnotationParser
         }
 
         // 2. assign key = value - mimics FieldAssignment() https://github.com/doctrine/annotations/blob/0cb0cd2950a5c6cdbf22adbe2bfd5fd1ea68588f/lib/Doctrine/Common/Annotations/DocParser.php#L1291-L1303
-        /** @var int $key */
         $key = $this->parseValue($tokenIterator, $currentPhpNode);
+        assert(is_int($key));
         $tokenIterator->consumeTokenType(Lexer::TOKEN_EQUAL);
 
         // mimics https://github.com/doctrine/annotations/blob/1.13.x/lib/Doctrine/Common/Annotations/DocParser.php#L1236-L1238

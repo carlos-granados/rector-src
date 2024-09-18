@@ -32,8 +32,8 @@ final readonly class UselessIfCondBeforeForeachDetector
             return false;
         }
 
-        /** @var Empty_ $empty */
         $empty = $if->cond;
+        assert($empty instanceof Empty_);
 
         if (! $this->nodeComparator->areNodesEqual($empty->expr, $foreachExpr)) {
             return false;
@@ -66,8 +66,8 @@ final readonly class UselessIfCondBeforeForeachDetector
             return false;
         }
 
-        /** @var Empty_ $empty */
         $empty = $cond->expr;
+        assert($empty instanceof Empty_);
 
         return $this->areCondExprAndForeachExprSame($empty, $foreachExpr, $scope);
     }
@@ -85,8 +85,8 @@ final readonly class UselessIfCondBeforeForeachDetector
             return false;
         }
 
-        /** @var NotIdentical|NotEqual $notIdentical */
         $notIdentical = $if->cond;
+        assert($notIdentical instanceof NotIdentical || $notIdentical instanceof NotEqual);
 
         return $this->isMatchingNotBinaryOp($notIdentical, $foreachExpr);
     }

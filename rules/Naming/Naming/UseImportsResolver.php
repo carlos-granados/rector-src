@@ -59,8 +59,8 @@ final readonly class UseImportsResolver
 
     private function resolveNamespace(): Namespace_|FileWithoutNamespace|null
     {
-        /** @var File|null $file */
         $file = $this->currentFileProvider->getFile();
+        assert($file instanceof File || $file === null);
         if (! $file instanceof File) {
             return null;
         }

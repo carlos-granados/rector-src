@@ -79,8 +79,8 @@ CODE_SAMPLE
             return null;
         }
 
-        /** @var FuncCall|ClassConstFetch $getClassFuncCallOrClassConstFetchClass */
         $getClassFuncCallOrClassConstFetchClass = $node->if;
+        assert($getClassFuncCallOrClassConstFetchClass instanceof FuncCall || $getClassFuncCallOrClassConstFetchClass instanceof ClassConstFetch);
 
         $firstExpr = $getClassFuncCallOrClassConstFetchClass instanceof FuncCall
             ? $getClassFuncCallOrClassConstFetchClass->getArgs()[0]
@@ -147,8 +147,8 @@ CODE_SAMPLE
 
     private function areValuesIdentical(Ternary $ternary): bool
     {
-        /** @var FuncCall $isObjectFuncCall */
         $isObjectFuncCall = $ternary->cond;
+        assert($isObjectFuncCall instanceof FuncCall);
 
         if ($isObjectFuncCall->isFirstClassCallable()) {
             return false;
@@ -157,8 +157,8 @@ CODE_SAMPLE
         $firstExpr = $isObjectFuncCall->getArgs()[0]
 ->value;
 
-        /** @var FuncCall|ClassConstFetch $getClassFuncCallOrClassConstFetchClass */
         $getClassFuncCallOrClassConstFetchClass = $ternary->if;
+        assert($getClassFuncCallOrClassConstFetchClass instanceof FuncCall || $getClassFuncCallOrClassConstFetchClass instanceof ClassConstFetch);
 
         if ($getClassFuncCallOrClassConstFetchClass instanceof FuncCall && ! $getClassFuncCallOrClassConstFetchClass->args[0] instanceof Arg) {
             return false;

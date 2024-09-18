@@ -104,21 +104,21 @@ CODE_SAMPLE
 
             $lastIfStmtKey = array_key_last($if->stmts);
 
-            /** @var Assign $assign */
             $assign = $this->stmtsManipulator->getUnwrappedLastStmt($if->stmts);
+            assert($assign instanceof Assign);
 
             $returnLastIf = new Return_($assign->expr);
             $this->mirrorComments($returnLastIf, $assign);
             $if->stmts[$lastIfStmtKey] = $returnLastIf;
 
-            /** @var Else_ $else */
             $else = $if->else;
+            assert($else instanceof Else_);
 
             /** @var array<int, Stmt> $elseStmts */
             $elseStmts = $else->stmts;
 
-            /** @var Assign $assign */
             $assign = $this->stmtsManipulator->getUnwrappedLastStmt($elseStmts);
+            assert($assign instanceof Assign);
 
             $this->mirrorComments($stmt, $assign);
 

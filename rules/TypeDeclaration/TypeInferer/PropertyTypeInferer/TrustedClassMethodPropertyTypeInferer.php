@@ -136,8 +136,8 @@ final readonly class TrustedClassMethodPropertyTypeInferer
         }
 
         if ($this->paramAnalyzer->isNullable($param)) {
-            /** @var NullableType $type */
             $type = $param->type;
+            assert($type instanceof NullableType);
 
             $types = [];
             $types[] = new NullType();

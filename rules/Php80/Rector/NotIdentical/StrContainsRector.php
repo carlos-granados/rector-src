@@ -135,8 +135,8 @@ CODE_SAMPLE
                 return null;
             }
 
-            /** @var FuncCall $funcCall */
             $funcCall = $expr->right;
+            assert($funcCall instanceof FuncCall);
             return $funcCall;
         }
 
@@ -149,8 +149,8 @@ CODE_SAMPLE
                 return null;
             }
 
-            /** @var FuncCall $funcCall */
             $funcCall = $expr->left;
+            assert($funcCall instanceof FuncCall);
             return $funcCall;
         }
 

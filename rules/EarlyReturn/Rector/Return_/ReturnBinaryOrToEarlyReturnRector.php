@@ -87,8 +87,8 @@ CODE_SAMPLE
                 continue;
             }
 
-            /** @var BooleanOr $booleanOr */
             $booleanOr = $stmt->expr;
+            assert($booleanOr instanceof BooleanOr);
 
             $left = $booleanOr->left;
             $ifs = $this->createMultipleIfs($left, $stmt, []);

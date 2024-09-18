@@ -87,8 +87,8 @@ CODE_SAMPLE
 
     private function processSetter(Assign $assign): ?Node
     {
-        /** @var PropertyFetch $propertyFetchNode */
         $propertyFetchNode = $assign->var;
+        assert($propertyFetchNode instanceof PropertyFetch);
 
         $propertyToMethodCall = $this->matchPropertyFetchCandidate($propertyFetchNode);
         if (! $propertyToMethodCall instanceof PropertyFetchToMethodCall) {
@@ -101,8 +101,8 @@ CODE_SAMPLE
 
         $args = $this->nodeFactory->createArgs([$assign->expr]);
 
-        /** @var Variable $variable */
         $variable = $propertyFetchNode->var;
+        assert($variable instanceof Variable);
 
         return $this->nodeFactory->createMethodCall($variable, $propertyToMethodCall->getNewSetMethod(), $args);
     }

@@ -161,8 +161,8 @@ final readonly class AssignToPropertyTypeInferer
                     return null;
                 }
 
-                /** @var PropertyFetch|StaticPropertyFetch $assignVar */
                 $assignVar = $node->var;
+                assert($assignVar instanceof PropertyFetch || $assignVar instanceof StaticPropertyFetch);
                 if (! $assignVar->name instanceof Identifier) {
                     $hasAssignDynamicPropertyValue = true;
                     return NodeTraverser::STOP_TRAVERSAL;

@@ -88,8 +88,8 @@ final readonly class TypeProvidingExprFromClassResolver
         $nativeReflectionClass = $classReflection->getNativeReflection();
 
         foreach ($nativeReflectionClass->getProperties() as $reflectionProperty) {
-            /** @var PhpPropertyReflection $phpPropertyReflection */
             $phpPropertyReflection = $classReflection->getNativeProperty($reflectionProperty->getName());
+            assert($phpPropertyReflection instanceof PhpPropertyReflection);
 
             $readableType = $phpPropertyReflection->getReadableType();
             if (! $this->isMatchingType($readableType, $objectType)) {

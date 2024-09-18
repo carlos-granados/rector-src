@@ -220,8 +220,8 @@ CODE_SAMPLE
         foreach ($paramsWithType as $paramName => $type) {
             $type = count($type) > 1 ? TypeCombinator::union(...$type) : current($type);
 
-            /** @var Param $paramByName */
             $paramByName = $this->getParamByName($node, $paramName);
+            assert($paramByName instanceof Param);
             $this->phpDocTypeChanger->changeParamType(
                 $node,
                 $phpDocInfo,

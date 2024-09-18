@@ -117,8 +117,8 @@ CODE_SAMPLE
             return null;
         }
 
-        /** @var int $totalKeys */
         $totalKeys = array_key_last($stmtsAware->stmts);
+        assert(is_int($totalKeys));
         for ($key = $jumpToKey; $key < $totalKeys; ++$key) {
             if (! isset($stmtsAware->stmts[$key], $stmtsAware->stmts[$key + 1])) {
                 break;
@@ -128,16 +128,16 @@ CODE_SAMPLE
                 continue;
             }
 
-            /** @var Expression $stmt */
             $stmt = $stmtsAware->stmts[$key];
+            assert($stmt instanceof Expression);
             if ($this->shouldSkip($stmt)) {
                 continue;
             }
 
             $nextStmt = $stmtsAware->stmts[$key + 1];
 
-            /** @var FuncCall $resetOrEndFuncCall */
             $resetOrEndFuncCall = $stmt->expr;
+            assert($resetOrEndFuncCall instanceof FuncCall);
 
             $keyFuncCall = $this->resolveKeyFuncCall($nextStmt, $resetOrEndFuncCall);
             if (! $keyFuncCall instanceof FuncCall) {

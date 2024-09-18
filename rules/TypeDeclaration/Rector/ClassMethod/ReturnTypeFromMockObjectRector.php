@@ -107,8 +107,8 @@ CODE_SAMPLE
             return null;
         }
 
-        /** @var Expr $expr */
         $expr = $returns[0]->expr;
+        assert($expr instanceof Expr);
         $returnType = $this->nodeTypeResolver->getNativeType($expr);
 
         if (! $this->isMockObjectType($returnType)) {

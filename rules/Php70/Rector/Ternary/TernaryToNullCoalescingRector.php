@@ -75,8 +75,8 @@ final class TernaryToNullCoalescingRector extends AbstractRector implements MinP
             return null;
         }
 
-        /** @var Identical|NotIdentical $ternaryCompareNode */
         $ternaryCompareNode = $node->cond;
+        assert($ternaryCompareNode instanceof Identical || $ternaryCompareNode instanceof NotIdentical);
         if ($this->isNullMatch($ternaryCompareNode->left, $ternaryCompareNode->right, $checkedNode)) {
             return new Coalesce($checkedNode, $fallbackNode);
         }

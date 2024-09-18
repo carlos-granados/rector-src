@@ -25,8 +25,8 @@ final class SetRectorsResolver
 
         $rectorConfig = new RectorConfig();
 
-        /** @var callable $configCallable */
         $configCallable = require $configFilePath;
+        assert(is_callable($configCallable));
         $configCallable($rectorConfig);
 
         // get tagged class-names

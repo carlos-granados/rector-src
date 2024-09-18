@@ -19,8 +19,8 @@ final class SpacingAwareCallableTypeNode extends CallableTypeNode implements Str
 
     private function createExplicitCallable(): string
     {
-        /** @var IdentifierTypeNode|GenericTypeNode $returnType */
         $returnType = $this->returnType;
+        assert($returnType instanceof IdentifierTypeNode || $returnType instanceof GenericTypeNode);
 
         $parameterTypeString = $this->createParameterTypeString();
 

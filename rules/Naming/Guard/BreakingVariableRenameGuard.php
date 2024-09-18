@@ -198,8 +198,8 @@ final readonly class BreakingVariableRenameGuard
             return false;
         }
 
-        /** @var string $currentName */
         $currentName = $this->nodeNameResolver->getName($param);
+        assert(is_string($currentName));
         return StringUtils::isMatch($currentName, self::AT_NAMING_REGEX);
     }
 

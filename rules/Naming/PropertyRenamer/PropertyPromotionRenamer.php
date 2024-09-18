@@ -128,8 +128,8 @@ final readonly class PropertyPromotionRenamer
             $desiredPropertyName
         );
 
-        /** @var string $paramVarName */
         $paramVarName = $param->var->name;
+        assert(is_string($paramVarName));
         $this->renameParamDoc($classMethodPhpDocInfo, $classMethod, $param, $paramVarName, $desiredPropertyName);
         $param->var = new Variable($desiredPropertyName);
 

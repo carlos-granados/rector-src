@@ -104,8 +104,8 @@ CODE_SAMPLE
         $nodesToReturn[] = $firstIf;
 
         while ($if->elseifs !== []) {
-            /** @var ElseIf_ $currentElseIf */
             $currentElseIf = array_shift($if->elseifs);
+            assert($currentElseIf instanceof ElseIf_);
 
             // If the last statement in the `elseif` breaks flow, merge it into the original `if` and stop processing
             if ($this->doesLastStatementBreakFlow($currentElseIf)) {

@@ -26,8 +26,8 @@ final readonly class AdditionalAutoloader
             return;
         }
 
-        /** @var string|null $autoloadFile */
         $autoloadFile = $input->getOption(Option::AUTOLOAD_FILE);
+        assert(is_string($autoloadFile) || $autoloadFile === null);
         if ($autoloadFile === null) {
             return;
         }

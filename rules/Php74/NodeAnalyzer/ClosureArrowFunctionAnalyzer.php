@@ -34,8 +34,8 @@ final readonly class ClosureArrowFunctionAnalyzer
             return null;
         }
 
-        /** @var Return_ $return */
         $return = $onlyStmt;
+        assert($return instanceof Return_);
         if (! $return->expr instanceof Expr) {
             return null;
         }

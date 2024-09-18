@@ -129,8 +129,8 @@ CODE_SAMPLE
             return $booleanOr;
         }
 
-        /** @var BooleanOr|null $result */
         $result = $this->processsNullableInstance($booleanOr);
+        assert($result instanceof BooleanOr || $result === null);
         return $result;
     }
 

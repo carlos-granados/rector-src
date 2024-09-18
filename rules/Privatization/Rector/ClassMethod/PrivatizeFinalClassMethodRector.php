@@ -120,8 +120,8 @@ CODE_SAMPLE
     private function shouldSkipClassMethod(ClassMethod $classMethod): bool
     {
         // edge case in nette framework
-        /** @var string $methodName */
         $methodName = $this->getName($classMethod->name);
+        assert(is_string($methodName));
         if (str_starts_with($methodName, 'createComponent')) {
             return true;
         }

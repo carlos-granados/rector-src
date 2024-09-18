@@ -45,8 +45,8 @@ final readonly class ExpectedNameResolver
             return null;
         }
 
-        /** @var string $currentName */
         $currentName = $this->nodeNameResolver->getName($param->var);
+        assert(is_string($currentName));
 
         if ($currentName === $expectedName || str_ends_with($currentName, ucfirst($expectedName))) {
             return null;
@@ -65,8 +65,8 @@ final readonly class ExpectedNameResolver
             return null;
         }
 
-        /** @var Variable $variable */
         $variable = $assign->var;
+        assert($variable instanceof Variable);
 
         return $this->nodeNameResolver->getName($variable);
     }
@@ -81,8 +81,8 @@ final readonly class ExpectedNameResolver
             return null;
         }
 
-        /** @var New_ $new */
         $new = $assign->expr;
+        assert($new instanceof New_);
         if (! $new->class instanceof Name) {
             return null;
         }

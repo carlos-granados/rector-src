@@ -66,8 +66,8 @@ CODE_SAMPLE
             return null;
         }
 
-        /** @var Ternary $nestedTernary */
         $nestedTernary = $node->else;
+        assert($nestedTernary instanceof Ternary);
 
         $spaceshipNode = $this->processSmallerThanTernary($node, $nestedTernary);
         if ($spaceshipNode instanceof Spaceship) {

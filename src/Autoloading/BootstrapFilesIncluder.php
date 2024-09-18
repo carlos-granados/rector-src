@@ -41,8 +41,8 @@ final class BootstrapFilesIncluder
 
     private function requireRectorStubs(): void
     {
-        /** @var false|string $stubsRectorDirectory */
         $stubsRectorDirectory = realpath(__DIR__ . '/../../stubs-rector');
+        assert($stubsRectorDirectory === false || is_string($stubsRectorDirectory));
         if ($stubsRectorDirectory === false) {
             return;
         }

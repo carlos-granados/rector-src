@@ -85,9 +85,9 @@ CODE_SAMPLE
 
             /**
              * @var Expression $stmt
-             * @var FuncCall $expr
              */
             $expr = $stmt->expr;
+            assert($expr instanceof FuncCall);
             $resultVariable = new Variable('result');
             $expr->args[1] = new Arg($resultVariable);
 

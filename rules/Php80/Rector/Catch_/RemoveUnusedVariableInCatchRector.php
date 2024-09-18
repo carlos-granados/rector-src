@@ -90,8 +90,8 @@ CODE_SAMPLE
                     continue;
                 }
 
-                /** @var string $variableName */
                 $variableName = $this->getName($caughtVar);
+                assert(is_string($variableName));
 
                 $isFoundInCatchStmts = (bool) $this->betterNodeFinder->findFirst(
                     $catch->stmts,

@@ -39,8 +39,8 @@ final class ExtensionConfigResolver
                 );
 
                 if ($includedFilePath === null) {
-                    /** @var string $installPath */
                     $installPath = $extensionConfig['install_path'];
+                    assert(is_string($installPath));
                     $includedFilePath = sprintf('%s/%s', $installPath, $includedFile);
                 }
 

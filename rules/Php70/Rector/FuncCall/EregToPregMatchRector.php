@@ -80,8 +80,8 @@ final class EregToPregMatchRector extends AbstractRector implements MinPhpVersio
             return null;
         }
 
-        /** @var FuncCall $funcCall */
         $funcCall = $node->expr;
+        assert($funcCall instanceof FuncCall);
 
         $node->expr = $this->createTernaryWithStrlenOfFirstMatch($funcCall);
 
@@ -128,8 +128,8 @@ final class EregToPregMatchRector extends AbstractRector implements MinPhpVersio
         $endDelimiter = $this->isCaseInsensitiveFunction($functionName) ? '#mi' : '#m';
         $concat = new Concat($startConcat, new String_($endDelimiter));
 
-        /** @var Arg $arg */
         $arg = $funcCall->args[0];
+        assert($arg instanceof Arg);
         $arg->value = $concat;
     }
 
@@ -158,8 +158,8 @@ final class EregToPregMatchRector extends AbstractRector implements MinPhpVersio
             return;
         }
 
-        /** @var LNumber $limitNumberNode */
         $limitNumberNode = $funcCall->args[2]->value;
+        assert($limitNumberNode instanceof LNumber);
         if ($limitNumberNode->value !== 0) {
             return;
         }
@@ -210,8 +210,8 @@ final class EregToPregMatchRector extends AbstractRector implements MinPhpVersio
             return null;
         }
 
-        /** @var string $functionName */
         $functionName = $this->getName($funcCall);
+        assert(is_string($functionName));
 
         $firstArg = $funcCall->getArgs()[0];
         $patternExpr = $firstArg->value;

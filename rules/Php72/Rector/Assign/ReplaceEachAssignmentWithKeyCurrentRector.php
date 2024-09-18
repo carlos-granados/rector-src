@@ -82,8 +82,8 @@ CODE_SAMPLE
             return null;
         }
 
-        /** @var FuncCall $eachFuncCall */
         $eachFuncCall = $assign->expr;
+        assert($eachFuncCall instanceof FuncCall);
 
         if ($eachFuncCall->isFirstClassCallable()) {
             return null;

@@ -63,8 +63,8 @@ CODE_SAMPLE
 
         $propertyFetchNode = $node->var;
 
-        /** @var Variable $propertyNode */
         $propertyNode = $propertyFetchNode->var;
+        assert($propertyNode instanceof Variable);
 
         foreach ($this->propertyAssignsToMethodCalls as $propertyAssignToMethodCall) {
             if (! $this->isName($propertyFetchNode, $propertyAssignToMethodCall->getOldPropertyName())) {

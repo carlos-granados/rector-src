@@ -125,8 +125,8 @@ final readonly class CallTypesResolver
             return $type;
         }
 
-        /** @var TypeWithClassName $firstUnionedType */
         $firstUnionedType = $type->getTypes()[0];
+        assert($firstUnionedType instanceof TypeWithClassName);
 
         foreach ($type->getTypes() as $unionedType) {
             if (! $unionedType instanceof TypeWithClassName) {

@@ -34,8 +34,8 @@ final readonly class SubstrMatchAndRefactor implements StrStartWithMatchAndRefac
         $isPositive = $binaryOp instanceof Identical || $binaryOp instanceof Equal;
 
         if ($binaryOp->left instanceof FuncCall && $this->nodeNameResolver->isName($binaryOp->left, 'substr')) {
-            /** @var FuncCall $funcCall */
             $funcCall = $binaryOp->left;
+            assert($funcCall instanceof FuncCall);
 
             $haystack = $funcCall->getArgs()[0]
 ->value;
@@ -44,8 +44,8 @@ final readonly class SubstrMatchAndRefactor implements StrStartWithMatchAndRefac
         }
 
         if ($binaryOp->right instanceof FuncCall && $this->nodeNameResolver->isName($binaryOp->right, 'substr')) {
-            /** @var FuncCall $funcCall */
             $funcCall = $binaryOp->right;
+            assert($funcCall instanceof FuncCall);
 
             $haystack = $funcCall->getArgs()[0]
 ->value;

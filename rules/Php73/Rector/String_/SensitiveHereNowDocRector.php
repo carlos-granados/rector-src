@@ -69,8 +69,8 @@ CODE_SAMPLE
         }
 
         // the doc label is not in the string → ok
-        /** @var string $docLabel */
         $docLabel = $node->getAttribute(AttributeKey::DOC_LABEL);
+        assert(is_string($docLabel));
 
         if (! \str_contains($node->value, $docLabel)) {
             return null;

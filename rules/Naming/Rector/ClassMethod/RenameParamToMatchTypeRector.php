@@ -115,8 +115,8 @@ CODE_SAMPLE
         string $expectedName,
         ClassMethod|Function_|Closure|ArrowFunction $classMethod
     ): bool {
-        /** @var string $paramName */
         $paramName = $this->getName($param);
+        assert(is_string($paramName));
 
         if ($this->breakingVariableRenameGuard->shouldSkipParam($paramName, $expectedName, $classMethod, $param)) {
             return true;

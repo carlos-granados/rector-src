@@ -214,10 +214,10 @@ CODE_SAMPLE
             return $this->processSingleUnionType($functionLike, $resolvedType, $returnedStrictTypeNode);
         }
 
-        /** @var Name $returnType */
         $returnType = $resolvedType instanceof ObjectType
             ? new FullyQualified($resolvedType->getClassName())
             : $returnedStrictTypeNode;
+        assert($returnType instanceof Name);
 
         $functionLike->returnType = $returnType;
 

@@ -121,8 +121,8 @@ CODE_SAMPLE
                     continue;
                 }
 
-                /** @var NullableType $currentParamType */
                 $currentParamType = $param->type;
+                assert($currentParamType instanceof NullableType);
 
                 $param->type = $currentParamType->type;
                 $param->default = $coalesce->right;

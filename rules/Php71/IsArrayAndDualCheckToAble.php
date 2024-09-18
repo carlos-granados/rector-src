@@ -36,11 +36,11 @@ final readonly class IsArrayAndDualCheckToAble
             return null;
         }
 
-        /** @var Instanceof_ $instanceofExpr */
         $instanceofExpr = $twoNodeMatch->getFirstExpr();
+        assert($instanceofExpr instanceof Instanceof_);
 
-        /** @var FuncCall $funcCallExpr */
         $funcCallExpr = $twoNodeMatch->getSecondExpr();
+        assert($funcCallExpr instanceof FuncCall);
 
         $instanceOfClass = $instanceofExpr->class;
         if ($instanceOfClass instanceof Expr) {

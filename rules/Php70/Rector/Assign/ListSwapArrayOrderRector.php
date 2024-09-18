@@ -53,8 +53,8 @@ final class ListSwapArrayOrderRector extends AbstractRector implements MinPhpVer
             return null;
         }
 
-        /** @var List_ $list */
         $list = $node->var;
+        assert($list instanceof List_);
 
         $printedVariables = [];
         foreach ($list->items as $arrayItem) {

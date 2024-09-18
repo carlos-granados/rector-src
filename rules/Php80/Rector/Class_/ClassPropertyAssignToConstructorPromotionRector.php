@@ -194,8 +194,8 @@ CODE_SAMPLE
             $assignStmtPosition = $promotionCandidate->getStmtPosition();
             unset($constructClassMethod->stmts[$assignStmtPosition]);
 
-            /** @var string $oldName */
             $oldName = $this->getName($param->var);
+            assert(is_string($oldName));
             $this->variableRenamer->renameVariableInFunctionLike($constructClassMethod, $oldName, $propertyName, null);
 
             $paramTagValueNode = $constructorPhpDocInfo->getParamTagValueByName($paramName);
@@ -299,8 +299,8 @@ CODE_SAMPLE
         }
 
         if ($this->paramAnalyzer->isNullable($param)) {
-            /** @var NullableType $type */
             $type = $param->type;
+            assert($type instanceof NullableType);
             $type = $type->type;
         } else {
             $type = $param->type;

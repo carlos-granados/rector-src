@@ -64,8 +64,8 @@ final readonly class StrposMatchAndRefactor implements StrStartWithMatchAndRefac
             return null;
         }
 
-        /** @var FuncCall $funcCall */
         $funcCall = $binaryOp->left;
+        assert($funcCall instanceof FuncCall);
 
         if ($funcCall->isFirstClassCallable()) {
             return null;
@@ -89,8 +89,8 @@ final readonly class StrposMatchAndRefactor implements StrStartWithMatchAndRefac
             return null;
         }
 
-        /** @var FuncCall $funcCall */
         $funcCall = $binaryOp->right;
+        assert($funcCall instanceof FuncCall);
         if (count($funcCall->getArgs()) < 2) {
             return null;
         }

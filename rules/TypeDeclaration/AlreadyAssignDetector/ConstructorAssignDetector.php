@@ -68,8 +68,8 @@ final readonly class ConstructorAssignDetector
                     return null;
                 }
 
-                /** @var Assign $assign */
                 $assign = $node;
+                assert($assign instanceof Assign);
 
                 // is merged in assign?
                 if ($this->isPropertyUsedInAssign($assign, $propertyName)) {

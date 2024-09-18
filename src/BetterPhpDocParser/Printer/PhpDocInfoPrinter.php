@@ -227,8 +227,8 @@ final class PhpDocInfoPrinter
             return $this->standardPrintPhpDocChildNode($phpDocChildNode);
         }
 
-        /** @var StartAndEnd|null $startAndEnd */
         $startAndEnd = $phpDocChildNode->getAttribute(PhpDocAttributeKey::START_AND_END);
+        assert($startAndEnd instanceof StartAndEnd || $startAndEnd === null);
 
         if ($startAndEnd instanceof StartAndEnd && ! $shouldReprintChildNode) {
             $isLastToken = $nodeCount === $key;

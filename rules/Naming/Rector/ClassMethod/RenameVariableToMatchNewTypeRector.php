@@ -83,8 +83,8 @@ CODE_SAMPLE
                 continue;
             }
 
-            /** @var Variable $variable */
             $variable = $assignOfNew->var;
+            assert($variable instanceof Variable);
             if ($expectedName === null) {
                 continue;
             }

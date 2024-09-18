@@ -90,8 +90,8 @@ CODE_SAMPLE
         if ($node->type instanceof UnionType) {
             $node->type->types[] = new Name('null');
         } elseif ($node->type instanceof ComplexType) {
-            /** @var IntersectionType $nodeType */
             $nodeType = $node->type;
+            assert($nodeType instanceof IntersectionType);
             $node->type = new UnionType([$nodeType, new Name('null')]);
         } else {
             $node->type = new NullableType($node->type);

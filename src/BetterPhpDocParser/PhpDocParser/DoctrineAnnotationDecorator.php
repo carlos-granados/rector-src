@@ -434,11 +434,11 @@ final readonly class DoctrineAnnotationDecorator implements PhpDocNodeDecoratorI
         \PHPStan\PhpDocParser\Ast\Node $startPhpDocChildNode,
         PhpDocChildNode $endPhpDocChildNode
     ): StartAndEnd {
-        /** @var StartAndEnd $currentStartAndEnd */
         $currentStartAndEnd = $startPhpDocChildNode->getAttribute(PhpDocAttributeKey::START_AND_END);
+        assert($currentStartAndEnd instanceof StartAndEnd);
 
-        /** @var StartAndEnd $nextStartAndEnd */
         $nextStartAndEnd = $endPhpDocChildNode->getAttribute(PhpDocAttributeKey::START_AND_END);
+        assert($nextStartAndEnd instanceof StartAndEnd);
 
         return new StartAndEnd($currentStartAndEnd->getStart(), $nextStartAndEnd->getEnd());
     }

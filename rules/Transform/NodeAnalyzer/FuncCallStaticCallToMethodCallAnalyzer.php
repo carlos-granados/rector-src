@@ -65,8 +65,8 @@ final readonly class FuncCallStaticCallToMethodCallAnalyzer
         ObjectType $objectType,
         ClassMethod | Function_ $functionLike
     ): void {
-        /** @var string $variableName */
         $variableName = $this->nodeNameResolver->getName($variable);
+        assert(is_string($variableName));
 
         // add variable to __construct as dependency
         $functionLike->params[] = $this->nodeFactory->createParamFromNameAndType($variableName, $objectType);

@@ -453,8 +453,8 @@ final class LazyContainerFactory
 
         // caching
         $rectorConfig->singleton(Cache::class, static function (Container $container): Cache {
-            /** @var CacheFactory $cacheFactory */
             $cacheFactory = $container->make(CacheFactory::class);
+            assert($cacheFactory instanceof CacheFactory);
             return $cacheFactory->create();
         });
 

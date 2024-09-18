@@ -26,8 +26,8 @@ final class RemoveNodesStartAndEndResolver
         $lastEndPosition = null;
 
         foreach ($removedChildNodes as $removedChildNode) {
-            /** @var StartAndEnd|null $removedPhpDocNodeInfo */
             $removedPhpDocNodeInfo = $removedChildNode->getAttribute(PhpDocAttributeKey::START_AND_END);
+            assert($removedPhpDocNodeInfo instanceof StartAndEnd || $removedPhpDocNodeInfo === null);
 
             // it's not there when comment block has empty row "\s\*\n"
             if (! $removedPhpDocNodeInfo instanceof StartAndEnd) {

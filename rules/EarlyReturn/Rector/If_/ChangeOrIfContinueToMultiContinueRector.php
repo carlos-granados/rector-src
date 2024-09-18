@@ -100,8 +100,8 @@ CODE_SAMPLE
     private function processMultiIfContinue(If_ $if): ?array
     {
         $node = clone $if;
-        /** @var Continue_ $continue */
         $continue = $if->stmts[0];
+        assert($continue instanceof Continue_);
         $ifs = $this->createMultipleIfs($if->cond, $continue, []);
 
         // ensure ifs not removed by other rules
