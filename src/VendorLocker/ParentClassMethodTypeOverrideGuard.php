@@ -79,10 +79,10 @@ final readonly class ParentClassMethodTypeOverrideGuard
             throw new UnresolvableClassException();
         }
 
-        /** @var string $methodName */
         $methodName = $classMethod instanceof ClassMethod
             ? $this->nodeNameResolver->getName($classMethod)
             : $classMethod->getName();
+        assert(is_string($methodName));
 
         $currentClassReflection = $classReflection;
         while ($this->hasClassParent($currentClassReflection)) {

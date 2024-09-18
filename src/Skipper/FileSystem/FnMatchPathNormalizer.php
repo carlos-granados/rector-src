@@ -16,8 +16,8 @@ final class FnMatchPathNormalizer
         }
 
         if (\str_contains($path, '..')) {
-            /** @var string|false $realPath */
             $realPath = realpath($path);
+            assert(is_string($realPath) || $realPath === false);
             if ($realPath === false) {
                 return '';
             }

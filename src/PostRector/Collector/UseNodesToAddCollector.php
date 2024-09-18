@@ -37,24 +37,24 @@ final class UseNodesToAddCollector
 
     public function addUseImport(FullyQualifiedObjectType $fullyQualifiedObjectType): void
     {
-        /** @var File $file */
         $file = $this->currentFileProvider->getFile();
+        assert($file instanceof File);
 
         $this->useImportTypesInFilePath[$file->getFilePath()][] = $fullyQualifiedObjectType;
     }
 
     public function addConstantUseImport(FullyQualifiedObjectType $fullyQualifiedObjectType): void
     {
-        /** @var File $file */
         $file = $this->currentFileProvider->getFile();
+        assert($file instanceof File);
 
         $this->constantUseImportTypesInFilePath[$file->getFilePath()][] = $fullyQualifiedObjectType;
     }
 
     public function addFunctionUseImport(FullyQualifiedObjectType $fullyQualifiedObjectType): void
     {
-        /** @var File $file */
         $file = $this->currentFileProvider->getFile();
+        assert($file instanceof File);
 
         $this->functionUseImportTypesInFilePath[$file->getFilePath()][] = $fullyQualifiedObjectType;
     }

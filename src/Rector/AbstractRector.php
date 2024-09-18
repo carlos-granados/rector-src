@@ -322,8 +322,8 @@ CODE_SAMPLE;
         $rectorWithLineChange = new RectorWithLineChange(static::class, $originalNode->getLine());
         $this->file->addRectorClassWithLine($rectorWithLineChange);
 
-        /** @var MutatingScope|null $currentScope */
         $currentScope = $node->getAttribute(AttributeKey::SCOPE);
+        assert($currentScope instanceof MutatingScope || $currentScope === null);
 
         if (is_array($refactoredNode)) {
             $firstNode = current($refactoredNode);

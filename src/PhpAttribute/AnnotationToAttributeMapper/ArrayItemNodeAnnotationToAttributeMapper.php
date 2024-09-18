@@ -49,8 +49,8 @@ final class ArrayItemNodeAnnotationToAttributeMapper implements AnnotationToAttr
         }
 
         if ($arrayItemNode->key !== null) {
-            /** @var Expr $keyExpr */
             $keyExpr = $this->annotationToAttributeMapper->map($arrayItemNode->key);
+            assert($keyExpr instanceof Expr);
         } else {
             if ($this->hasNoParenthesesAnnotation($arrayItemNode)) {
                 try {

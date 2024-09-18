@@ -404,8 +404,8 @@ final readonly class NodeFactory
      */
     private function createBooleanAndFromNodes(array $binaryOps): BooleanAnd
     {
-        /** @var NotIdentical|BooleanAnd $mainBooleanAnd */
         $mainBooleanAnd = array_shift($binaryOps);
+        assert($mainBooleanAnd instanceof NotIdentical || $mainBooleanAnd instanceof BooleanAnd);
         foreach ($binaryOps as $binaryOp) {
             $mainBooleanAnd = new BooleanAnd($mainBooleanAnd, $binaryOp);
         }

@@ -128,9 +128,8 @@ final readonly class FilesFinder
         foreach ($finder as $fileInfo) {
             // getRealPath() function will return false when it checks broken symlinks.
             // So we should check if this file exists or we got broken symlink
-
-            /** @var string|false $path */
             $path = $fileInfo->getRealPath();
+            assert(is_string($path) || $path === false);
             if ($path === false) {
                 continue;
             }

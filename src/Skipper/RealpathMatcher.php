@@ -10,14 +10,14 @@ final class RealpathMatcher
 {
     public function match(string $matchingPath, string $filePath): bool
     {
-        /** @var string|false $realPathMatchingPath */
         $realPathMatchingPath = realpath($matchingPath);
+        assert(is_string($realPathMatchingPath) || $realPathMatchingPath === false);
         if ($realPathMatchingPath === false) {
             return false;
         }
 
-        /** @var string|false $realpathFilePath */
         $realpathFilePath = realpath($filePath);
+        assert(is_string($realpathFilePath) || $realpathFilePath === false);
         if ($realpathFilePath === false) {
             return false;
         }

@@ -66,8 +66,8 @@ final class ClassRenamePhpDocNodeVisitor extends AbstractPhpDocNodeVisitor
             return null;
         }
 
-        /** @var \PhpParser\Node $currentPhpNode */
         $currentPhpNode = $this->currentPhpNode;
+        assert($currentPhpNode instanceof \PhpParser\Node);
 
         $identifier = clone $node;
         $identifier->name = $this->resolveNamespacedName($identifier, $currentPhpNode, $node->name);
@@ -76,8 +76,8 @@ final class ClassRenamePhpDocNodeVisitor extends AbstractPhpDocNodeVisitor
         // make sure to compare FQNs
         $objectType = $this->expandShortenedObjectType($staticType);
         foreach ($this->oldToNewTypes as $oldToNewType) {
-            /** @var ObjectType $oldType */
             $oldType = $oldToNewType->getOldType();
+            assert($oldType instanceof ObjectType);
             if (! $objectType->equals($oldType)) {
                 continue;
             }

@@ -34,8 +34,8 @@ final readonly class ClassMethodParamVendorLockResolver
             return false;
         }
 
-        /** @var string $methodName */
         $methodName = $this->nodeNameResolver->getName($classMethod);
+        assert(is_string($methodName));
 
         // has interface vendor lock? → better skip it, as PHPStan has access only to just analyzed classes
         if ($this->hasParentInterfaceMethod($classReflection, $methodName)) {

@@ -42,8 +42,8 @@ final readonly class DoctrineEntityAnalyzer
 
     public function hasClassReflectionAttribute(ClassReflection $classReflection): bool
     {
-        /** @var ReflectionClass $nativeReflectionClass */
         $nativeReflectionClass = $classReflection->getNativeReflection();
+        assert($nativeReflectionClass instanceof ReflectionClass);
 
         // skip early in case of no attributes at all
         if ($nativeReflectionClass->getAttributes() === []) {

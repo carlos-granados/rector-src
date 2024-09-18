@@ -84,8 +84,8 @@ final class AstResolver
         $classLikeName = $classReflection->getName();
         $methodName = $methodReflection->getName();
 
-        /** @var ClassMethod|null $classMethod */
         $classMethod = null;
+        assert($classMethod instanceof ClassMethod || $classMethod === null);
         $this->betterNodeFinder->findFirst(
             $nodes,
             function (Node $node) use ($classLikeName, $methodName, &$classMethod): bool {
@@ -132,7 +132,6 @@ final class AstResolver
 
         $functionName = $functionReflection->getName();
 
-        /** @var Function_|null $functionNode */
         $functionNode = $this->betterNodeFinder->findFirst(
             $nodes,
             function (Node $node) use ($functionName): bool {
@@ -143,6 +142,7 @@ final class AstResolver
                 return $this->nodeNameResolver->isName($node, $functionName);
             }
         );
+        assert($functionNode instanceof Function_ || $functionNode === null);
 
         return $functionNode;
     }
@@ -195,7 +195,6 @@ final class AstResolver
         $stmts = $this->parseFileNameToDecoratedNodes($fileName);
         $className = $classReflection->getName();
 
-        /** @var Class_|Trait_|Interface_|Enum_|null $classLike */
         $classLike = $this->betterNodeFinder->findFirst(
             $stmts,
             function (Node $node) use ($className): bool {
@@ -206,6 +205,7 @@ final class AstResolver
                 return $this->nodeNameResolver->isName($node, $className);
             }
         );
+        assert($classLike instanceof Class_ || $classLike instanceof Trait_ || $classLike instanceof Interface_ || $classLike instanceof Enum_ || $classLike === null);
 
         return $classLike;
     }
@@ -331,7 +331,6 @@ final class AstResolver
         $classReflection = $methodReflection->getDeclaringClass();
         $traits = $this->parseClassReflectionTraits($classReflection);
 
-        /** @var ClassMethod|null $classMethod */
         $classMethod = $this->betterNodeFinder->findFirst(
             $traits,
             function (Node $node) use ($methodName): bool {
@@ -342,6 +341,7 @@ final class AstResolver
                 return $this->nodeNameResolver->isName($node, $methodName);
             }
         );
+        assert($classMethod instanceof ClassMethod || $classMethod === null);
 
         return $classMethod;
     }
@@ -354,8 +354,8 @@ final class AstResolver
         string $desiredClassName,
         string $desiredPropertyName
     ): ?Param {
-        /** @var Param|null $paramNode */
         $paramNode = null;
+        assert($paramNode instanceof Param || $paramNode === null);
 
         $this->betterNodeFinder->findFirst(
             $stmts,

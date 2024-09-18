@@ -20,8 +20,8 @@ abstract class AbstractScopeAwareRector extends AbstractRector implements ScopeA
      */
     public function refactor(Node $node): int|array|Node|null
     {
-        /** @var MutatingScope|null $currentScope */
         $currentScope = $node->getAttribute(AttributeKey::SCOPE);
+        assert($currentScope instanceof MutatingScope || $currentScope === null);
 
         if (! $currentScope instanceof Scope) {
             $errorMessage = sprintf(

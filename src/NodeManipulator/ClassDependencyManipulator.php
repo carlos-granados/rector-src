@@ -77,8 +77,8 @@ final readonly class ClassDependencyManipulator
         ?Type $type,
         Assign $assign
     ): void {
-        /** @var ClassMethod|null $constructorMethod */
         $constructorMethod = $class->getMethod(MethodName::CONSTRUCT);
+        assert($constructorMethod instanceof ClassMethod || $constructorMethod === null);
 
         if ($constructorMethod instanceof ClassMethod) {
             $this->classMethodAssignManipulator->addParameterAndAssignToMethod(

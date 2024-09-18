@@ -55,8 +55,8 @@ final class ClassRenamingPostRector extends AbstractPostRector
             return null;
         }
 
-        /** @var Scope|null $scope */
         $scope = $node->getAttribute(AttributeKey::SCOPE);
+        assert($scope instanceof Scope || $scope === null);
 
         if ($node instanceof FullyQualified) {
             $result = $this->classRenamer->renameNode($node, $this->oldToNewClasses, $scope);

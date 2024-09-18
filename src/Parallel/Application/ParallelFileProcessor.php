@@ -111,11 +111,11 @@ final class ParallelFileProcessor
             });
         });
 
-        /** @var string $serverAddress */
         $serverAddress = $tcpServer->getAddress();
+        assert(is_string($serverAddress));
 
-        /** @var int $serverPort */
         $serverPort = parse_url($serverAddress, PHP_URL_PORT);
+        assert(is_int($serverPort));
 
         $systemErrorsCount = 0;
         $reachedSystemErrorsCountLimit = false;

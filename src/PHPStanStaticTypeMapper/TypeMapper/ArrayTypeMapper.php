@@ -107,8 +107,8 @@ final class ArrayTypeMapper implements TypeMapperInterface
             return new SpacingAwareArrayTypeNode(new BracketsAwareUnionTypeNode($unionedArrayType));
         }
 
-        /** @var TypeNode $arrayType */
         $arrayType = array_shift($unionedArrayType);
+        assert($arrayType instanceof TypeNode);
         return new SpacingAwareArrayTypeNode($arrayType);
     }
 

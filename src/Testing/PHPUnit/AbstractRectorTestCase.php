@@ -97,8 +97,8 @@ abstract class AbstractRectorTestCase extends AbstractLazyTestCase implements Re
                 // no rules at all, e.g. in case of only post rector run
                 : [];
 
-            /** @var RectorNodeTraverser $rectorNodeTraverser */
             $rectorNodeTraverser = $rectorConfig->make(RectorNodeTraverser::class);
+            assert($rectorNodeTraverser instanceof RectorNodeTraverser);
             $rectorNodeTraverser->refreshPhpRectors($rectors);
 
             // store cache
@@ -108,12 +108,12 @@ abstract class AbstractRectorTestCase extends AbstractLazyTestCase implements Re
         $this->applicationFileProcessor = $this->make(ApplicationFileProcessor::class);
         $this->dynamicSourceLocatorProvider = $this->make(DynamicSourceLocatorProvider::class);
 
-        /** @var AdditionalAutoloader $additionalAutoloader */
         $additionalAutoloader = $this->make(AdditionalAutoloader::class);
+        assert($additionalAutoloader instanceof AdditionalAutoloader);
         $additionalAutoloader->autoloadPaths();
 
-        /** @var BootstrapFilesIncluder $bootstrapFilesIncluder */
         $bootstrapFilesIncluder = $this->make(BootstrapFilesIncluder::class);
+        assert($bootstrapFilesIncluder instanceof BootstrapFilesIncluder);
         $bootstrapFilesIncluder->includeBootstrapFiles();
     }
 
@@ -254,8 +254,8 @@ abstract class AbstractRectorTestCase extends AbstractLazyTestCase implements Re
     {
         $this->dynamicSourceLocatorProvider->setFilePath($filePath);
 
-        /** @var ConfigurationFactory $configurationFactory */
         $configurationFactory = $this->make(ConfigurationFactory::class);
+        assert($configurationFactory instanceof ConfigurationFactory);
         $configuration = $configurationFactory->createForTests([$filePath]);
 
         $processResult = $this->applicationFileProcessor->processFiles([$filePath], $configuration);

@@ -55,8 +55,8 @@ final class NodeTransformer
 
         foreach ($messageParts as $messagePart) {
             if (StringUtils::isMatch($messagePart, self::PERCENT_TEXT_REGEX)) {
-                /** @var Expr $messagePartNode */
                 $messagePartNode = array_shift($arrayItems);
+                assert($messagePartNode instanceof Expr);
             } else {
                 $messagePartNode = new String_($messagePart);
             }

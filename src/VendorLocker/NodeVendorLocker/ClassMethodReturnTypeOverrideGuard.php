@@ -90,10 +90,10 @@ final readonly class ClassMethodReturnTypeOverrideGuard
          *     - one of them in /vendor/ -> not allowed
          *     - both not in /vendor/ -> allowed
          */
-        /** @var ClassReflection $currentClassReflection */
         $currentClassReflection = $this->reflectionResolver->resolveClassReflection($classMethod);
-        /** @var string $currentFileName */
+        assert($currentClassReflection instanceof ClassReflection);
         $currentFileName = $currentClassReflection->getFileName();
+        assert(is_string($currentFileName));
 
         // child (current)
         $normalizedCurrentFileName = $this->filePathHelper->normalizePathAndSchema($currentFileName);

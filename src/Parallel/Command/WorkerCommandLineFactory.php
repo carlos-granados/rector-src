@@ -157,8 +157,8 @@ final readonly class WorkerCommandLineFactory
                 continue;
             }
 
-            /** @var bool|string|null $optionValue */
             $optionValue = $input->getOption($mainCommandOptionName);
+            assert(is_bool($optionValue) || is_string($optionValue) || $optionValue === null);
 
             // skip clutter
             if ($optionValue === null) {

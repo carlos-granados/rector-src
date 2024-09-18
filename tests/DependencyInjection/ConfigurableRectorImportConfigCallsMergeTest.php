@@ -24,8 +24,8 @@ final class ConfigurableRectorImportConfigCallsMergeTest extends AbstractLazyTes
         $renameClassRector = $this->make(RenameClassRector::class);
         $this->assertInstanceOf(RenameClassRector::class, $renameClassRector);
 
-        /** @var RenamedClassesDataCollector $renamedClassesDataCollector */
         $renamedClassesDataCollector = $this->make(RenamedClassesDataCollector::class);
+        assert($renamedClassesDataCollector instanceof RenamedClassesDataCollector);
 
         $this->assertSame($expectedConfiguration, $renamedClassesDataCollector->getOldToNewClasses());
     }

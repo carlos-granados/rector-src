@@ -144,12 +144,12 @@ final readonly class PhpNestedAttributeGroupFactory
         string $originalIdentifier,
         AnnotationPropertyToAttributeClass $annotationPropertyToAttributeClass
     ): FullyQualified|Name {
-        /** @var string $shortDoctrineAttributeName */
         $shortDoctrineAttributeName = Strings::after(
             $annotationPropertyToAttributeClass->getAttributeClass(),
             '\\',
             -1
         );
+        assert(is_string($shortDoctrineAttributeName));
 
         if (str_starts_with($originalIdentifier, '@ORM')) {
             // or alias
@@ -195,8 +195,8 @@ final readonly class PhpNestedAttributeGroupFactory
         $attributeGroups = [];
 
         foreach ($nestedAnnotationToAttribute->getAnnotationPropertiesToAttributeClasses() as $annotationPropertyToAttributeClass) {
-            /** @var string $annotationProperty */
             $annotationProperty = $annotationPropertyToAttributeClass->getAnnotationProperty();
+            assert(is_string($annotationProperty));
 
             $nestedArrayItemNode = $doctrineAnnotationTagValueNode->getValue($annotationProperty);
             if (! $nestedArrayItemNode instanceof ArrayItemNode) {

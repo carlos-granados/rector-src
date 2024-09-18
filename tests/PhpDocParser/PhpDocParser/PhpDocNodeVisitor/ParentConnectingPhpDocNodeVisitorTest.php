@@ -22,8 +22,8 @@ final class ParentConnectingPhpDocNodeVisitorTest extends AbstractLazyTestCase
     {
         $this->phpDocNodeTraverser = $this->make(PhpDocNodeTraverser::class);
 
-        /** @var ParentConnectingPhpDocNodeVisitor $parentConnectingPhpDocNodeVisitor */
         $parentConnectingPhpDocNodeVisitor = $this->make(ParentConnectingPhpDocNodeVisitor::class);
+        assert($parentConnectingPhpDocNodeVisitor instanceof ParentConnectingPhpDocNodeVisitor);
         $this->phpDocNodeTraverser->addPhpDocNodeVisitor($parentConnectingPhpDocNodeVisitor);
     }
 
@@ -32,8 +32,8 @@ final class ParentConnectingPhpDocNodeVisitorTest extends AbstractLazyTestCase
         $phpDocNode = $this->createPhpDocNode();
         $this->phpDocNodeTraverser->traverse($phpDocNode);
 
-        /** @var PhpDocTagNode $phpDocChildNode */
         $phpDocChildNode = $phpDocNode->children[0];
+        assert($phpDocChildNode instanceof PhpDocTagNode);
 
         $returnTagValueNode = $phpDocChildNode->value;
 

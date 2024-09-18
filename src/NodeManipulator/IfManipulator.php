@@ -64,8 +64,8 @@ final readonly class IfManipulator
         while ($this->isIfWithOnlyStmtIf($currentIf)) {
             $ifs[] = $currentIf;
 
-            /** @var If_ $currentIf */
             $currentIf = $currentIf->stmts[0];
+            assert($currentIf instanceof If_);
         }
 
         if ($ifs === []) {
@@ -133,8 +133,8 @@ final readonly class IfManipulator
         while ($this->isIfWithOnlyStmtIf($currentIf)) {
             $ifs[] = $currentIf;
 
-            /** @var If_ $currentIf */
             $currentIf = $currentIf->stmts[0];
+            assert($currentIf instanceof If_);
         }
 
         // IfManipulator is not build to handle elseif and else

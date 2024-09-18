@@ -118,8 +118,8 @@ final class UnionTypeMapper implements TypeMapperInterface
             return null;
         }
 
-        /** @var PHPParserNodeIntersectionType|Identifier|Name $type */
         $type = $nullableType->type;
+        assert($type instanceof PHPParserNodeIntersectionType || $type instanceof Identifier || $type instanceof Name);
         if (! $type instanceof PHPParserNodeIntersectionType) {
             // ?false is allowed only since PHP 8.2+, lets fallback to bool instead
             if ($type->toString() === 'false' && ! $this->phpVersionProvider->isAtLeastPhpVersion(

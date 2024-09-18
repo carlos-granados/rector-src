@@ -100,8 +100,8 @@ final readonly class FilePathHelper
                 continue;
             }
 
-            /** @var string $removedPart */
             $removedPart = array_pop($normalizedPathParts);
+            assert(is_string($removedPart));
             if ($scheme !== 'phar') {
                 continue;
             }

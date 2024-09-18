@@ -126,8 +126,8 @@ final readonly class PHPStanNodeScopeResolver
             // the class reflection is resolved AFTER entering to class node
             // so we need to get it from the first after this one
             if ($node instanceof Class_ || $node instanceof Interface_ || $node instanceof Enum_) {
-                /** @var MutatingScope $mutatingScope */
                 $mutatingScope = $this->resolveClassOrInterfaceScope($node, $mutatingScope);
+                assert($mutatingScope instanceof MutatingScope);
                 $node->setAttribute(AttributeKey::SCOPE, $mutatingScope);
                 return;
             }
@@ -510,8 +510,8 @@ final readonly class PHPStanNodeScopeResolver
 
         $traitScope = clone $mutatingScope;
 
-        /** @var ScopeContext $scopeContext */
         $scopeContext = $this->privatesAccessor->getPrivateProperty($traitScope, self::CONTEXT);
+        assert($scopeContext instanceof ScopeContext);
         $traitContext = clone $scopeContext;
 
         // before entering the class/trait again, we have to tell scope no class was set, otherwise it crashes

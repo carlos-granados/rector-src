@@ -92,11 +92,11 @@ final class NamedArgsFactory
                 continue;
             }
 
-            /** @var string $class */
             $class = $match['class'];
+            assert(is_string($class));
 
-            /** @var string $constant */
             $constant = $match['constant'];
+            assert(is_string($constant));
 
             $arrayItem->key = new ClassConstFetch(new Name($class), $constant);
         }

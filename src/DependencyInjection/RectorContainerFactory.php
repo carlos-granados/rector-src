@@ -18,13 +18,13 @@ final class RectorContainerFactory
         $mainConfigFile = $bootstrapConfigs->getMainConfigFile();
 
         if ($mainConfigFile !== null) {
-            /** @var ChangedFilesDetector $changedFilesDetector */
             $changedFilesDetector = $container->make(ChangedFilesDetector::class);
+            assert($changedFilesDetector instanceof ChangedFilesDetector);
             $changedFilesDetector->setFirstResolvedConfigFileInfo($mainConfigFile);
         }
 
-        /** @var BootstrapFilesIncluder $bootstrapFilesIncluder */
         $bootstrapFilesIncluder = $container->get(BootstrapFilesIncluder::class);
+        assert($bootstrapFilesIncluder instanceof BootstrapFilesIncluder);
         $bootstrapFilesIncluder->includeBootstrapFiles();
 
         return $container;

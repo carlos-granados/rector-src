@@ -71,8 +71,8 @@ final class FilesFinderTest extends AbstractLazyTestCase
         $foundFiles = $this->filesFinder->findInDirectoriesAndFiles([__DIR__ . '/Source'], [$suffix]);
         $this->assertCount($count, $foundFiles);
 
-        /** @var string $foundFile */
         $foundFile = array_pop($foundFiles);
+        assert(is_string($foundFile));
         $fileBasename = $this->getFileBasename($foundFile);
 
         $this->assertSame($expectedFileName, $fileBasename);
@@ -116,8 +116,8 @@ final class FilesFinderTest extends AbstractLazyTestCase
         $foundFiles = $this->filesFinder->findInDirectoriesAndFiles([__DIR__ . '/Source/**/foo.txt'], ['txt']);
         $this->assertCount(2, $foundFiles);
 
-        /** @var string $foundFile */
         $foundFile = array_pop($foundFiles);
+        assert(is_string($foundFile));
 
         $fileBasename = $this->getFileBasename($foundFile);
         $this->assertSame('foo.txt', $fileBasename);
