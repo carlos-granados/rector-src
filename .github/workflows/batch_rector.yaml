@@ -2,26 +2,9 @@
 name: Rector
 
 on:
-    pull_request: null
+    push:
 
 jobs:
-    no_batch_rector:
-
-        runs-on: ubuntu-latest
-
-        steps:
-            -
-                uses: actions/checkout@v4
-
-            -
-                uses: shivammathur/setup-php@v2
-                with:
-                    php-version: 8.2
-                    coverage: none
-
-            -   run: composer install --no-progress --ansi
-
-            -   run: bin/rector process --ansi
     batch_rector:
         strategy:
             matrix:
@@ -42,3 +25,11 @@ jobs:
             -   run: composer install --no-progress --ansi
 
             -   run: bin/rector process --batch-index=${{ strategy.job-index }} --batch-total=${{ strategy.job-total }} --ansi
+
+            -
+                uses: EndBug/add-and-commit@v9
+                with:
+                    message: 'Rector Batch ${{ strategy.job-index }}'
+                    author_name: 'GitHub Action <actions@github.com>'
+                    author_email: 'action@github.com'
+                    pull: '--autostash'
