@@ -153,6 +153,6 @@ try {
     exit(Command::FAILURE);
 }
 
-/** @var Application $application */
 $application = $container->get(Application::class);
+assert($application instanceof Application);
 exit($application->run());
