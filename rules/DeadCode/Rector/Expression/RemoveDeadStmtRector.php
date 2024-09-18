@@ -95,8 +95,8 @@ CODE_SAMPLE
             return false;
         }
 
-        /** @var PropertyFetch|StaticPropertyFetch $propertyFetch */
         $propertyFetch = $expression->expr;
+        assert($propertyFetch instanceof PropertyFetch || $propertyFetch instanceof StaticPropertyFetch);
         $phpPropertyReflection = $this->reflectionResolver->resolvePropertyReflectionFromPropertyFetch($propertyFetch);
 
         /**

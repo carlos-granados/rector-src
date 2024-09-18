@@ -84,8 +84,8 @@ final class SimplifyConditionsRector extends AbstractRector
             return $twoNodeMatch;
         }
 
-        /** @var Identical|NotIdentical $firstExpr */
         $firstExpr = $twoNodeMatch->getFirstExpr();
+        assert($firstExpr instanceof Identical || $firstExpr instanceof NotIdentical);
 
         $otherExpr = $twoNodeMatch->getSecondExpr();
         if ($this->valueResolver->isFalse($otherExpr)) {

@@ -101,8 +101,8 @@ CODE_SAMPLE
             /** @var Expression<Assign> $currentStmt */
             $currentStmt = $stmts[$stmtPosition];
 
-            /** @var Assign $assign */
             $assign = $currentStmt->expr;
+            assert($assign instanceof Assign);
 
             if ($this->hasCallLikeInAssignExpr($assign, $scope)) {
                 // clean safely

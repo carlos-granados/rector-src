@@ -119,8 +119,8 @@ CODE_SAMPLE
             return null;
         }
 
-        /** @var String_ $operator */
         $operator = $args[2]->value;
+        assert($operator instanceof String_);
         $comparisonClass = self::OPERATOR_TO_COMPARISON[$operator->value];
 
         return new $comparisonClass($left, $right);

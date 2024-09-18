@@ -88,8 +88,8 @@ CODE_SAMPLE
             return null;
         }
 
-        /** @var string $includeValue */
         $includeValue = $this->valueResolver->getValue($node->expr);
+        assert(is_string($includeValue));
 
         // skip phar
         if (\str_starts_with($includeValue, 'phar://')) {

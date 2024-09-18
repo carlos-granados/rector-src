@@ -75,8 +75,8 @@ final class UnnecessaryTernaryExpressionRector extends AbstractRector
             return null;
         }
 
-        /** @var BinaryOp $binaryOperation */
         $binaryOperation = $node->cond;
+        assert($binaryOperation instanceof BinaryOp);
 
         if ($this->valueResolver->isTrue($ifExpression) && $this->valueResolver->isFalse($elseExpression)) {
             return $binaryOperation;

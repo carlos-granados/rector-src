@@ -101,8 +101,8 @@ CODE_SAMPLE
                 continue;
             }
 
-            /** @var string $methodName */
             $methodName = $this->getName($classMethod->name);
+            assert(is_string($methodName));
 
             if ($classMethod->isPublic()) {
                 foreach ($interfaces as $interface) {
@@ -120,8 +120,8 @@ CODE_SAMPLE
                     continue;
                 }
 
-                /** @var ReflectionMethod $parentReflectionMethod */
                 $parentReflectionMethod = $nativeClassReflection->getMethod($methodName);
+                assert($parentReflectionMethod instanceof ReflectionMethod);
                 if ($this->isClassMethodCompatibleWithParentReflectionMethod($classMethod, $parentReflectionMethod)) {
                     continue;
                 }

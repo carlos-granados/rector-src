@@ -146,8 +146,8 @@ CODE_SAMPLE
             $new->args[0] = new Arg($getMessageMethodCall);
         }
 
-        /** @var Arg $messageArgument */
         $messageArgument = $new->getArgs()[0];
+        assert($messageArgument instanceof Arg);
         $shouldUseNamedArguments = $messageArgument->name !== null;
 
         if (! isset($new->getArgs()[1])) {
@@ -158,8 +158,8 @@ CODE_SAMPLE
             );
         }
 
-        /** @var Arg $arg1 */
         $arg1 = $new->args[1];
+        assert($arg1 instanceof Arg);
         if ($arg1->name instanceof Identifier && $arg1->name->toString() === 'previous') {
             $new->args[1] = new Arg(
                 new MethodCall($catchedThrowableVariable, 'getCode'),

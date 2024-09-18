@@ -93,14 +93,14 @@ CODE_SAMPLE
                 return null;
             }
 
-            /** @var If_ $firstNodeInsideForeach */
             $firstNodeInsideForeach = $foreach->stmts[0];
+            assert($firstNodeInsideForeach instanceof If_);
             if ($this->shouldSkipIf($firstNodeInsideForeach)) {
                 return null;
             }
 
-            /** @var Identical|Equal $ifCondition */
             $ifCondition = $firstNodeInsideForeach->cond;
+            assert($ifCondition instanceof Identical || $ifCondition instanceof Equal);
 
             $twoNodeMatch = $this->matchNodes($ifCondition, $foreach->valueVar);
             if (! $twoNodeMatch instanceof TwoNodeMatch) {

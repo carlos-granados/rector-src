@@ -107,11 +107,11 @@ CODE_SAMPLE
             /** @var TryCatch $stmt */
             $catch = $stmt->catches[0];
 
-            /** @var Variable $catchVar */
             $catchVar = $catch->var;
+            assert($catchVar instanceof Variable);
 
-            /** @var string $oldVariableName */
             $oldVariableName = (string) $this->getName($catchVar);
+            assert(is_string($oldVariableName));
 
             $typeShortName = $this->resolveVariableName($catch->types[0]);
             $newVariableName = $this->resolveNewVariableName($typeShortName);

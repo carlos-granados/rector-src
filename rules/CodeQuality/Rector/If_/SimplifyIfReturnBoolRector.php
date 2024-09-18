@@ -92,8 +92,8 @@ CODE_SAMPLE
 
             $return = $stmt;
 
-            /** @var Return_ $ifInnerNode */
             $ifInnerNode = $if->stmts[0];
+            assert($ifInnerNode instanceof Return_);
 
             $innerIfInnerNode = $ifInnerNode->expr;
             if (! $innerIfInnerNode instanceof Expr) {
@@ -131,11 +131,11 @@ CODE_SAMPLE
             return true;
         }
 
-        /** @var Return_ $ifInnerNode */
         $ifInnerNode = $if->stmts[0];
+        assert($ifInnerNode instanceof Return_);
 
-        /** @var Expr $returnedExpr */
         $returnedExpr = $ifInnerNode->expr;
+        assert($returnedExpr instanceof Expr);
 
         if (! $this->valueResolver->isTrueOrFalse($returnedExpr)) {
             return true;
@@ -242,8 +242,8 @@ CODE_SAMPLE
         }
 
         if ($this->valueResolver->isFalse($innerExpr)) {
-            /** @var Expr $expr */
             $expr = $return->expr;
+            assert($expr instanceof Expr);
             if ($if->cond instanceof NotIdentical && $this->valueResolver->isTrue($expr)) {
                 $if->cond = new Identical($if->cond->left, $if->cond->right);
                 return $this->processReturnTrue($if, $return);

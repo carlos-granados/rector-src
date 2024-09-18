@@ -28,8 +28,8 @@ final readonly class CompactConverter
                 return false;
             }
 
-            /** @var string|null $variableName */
             $variableName = $this->valueResolver->getValue($arg->value);
+            assert(is_string($variableName) || $variableName === null);
             if (! is_string($variableName)) {
                 return false;
             }
@@ -47,8 +47,8 @@ final readonly class CompactConverter
                 throw new ShouldNotHappenException();
             }
 
-            /** @var string|null $variableName */
             $variableName = $this->valueResolver->getValue($arg->value);
+            assert(is_string($variableName) || $variableName === null);
             if (! is_string($variableName)) {
                 throw new ShouldNotHappenException();
             }

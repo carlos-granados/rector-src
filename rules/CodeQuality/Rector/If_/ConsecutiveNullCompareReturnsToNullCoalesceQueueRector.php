@@ -176,11 +176,11 @@ CODE_SAMPLE
      */
     private function createCealesceReturn(array $coalescingExprs, ?Expr $appendExpr): Return_
     {
-        /** @var Expr $leftExpr */
         $leftExpr = array_shift($coalescingExprs);
+        assert($leftExpr instanceof Expr);
 
-        /** @var Expr $rightExpr */
         $rightExpr = array_shift($coalescingExprs);
+        assert($rightExpr instanceof Expr);
 
         $coalesce = new Coalesce($leftExpr, $rightExpr);
 

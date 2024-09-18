@@ -86,8 +86,8 @@ CODE_SAMPLE
 
     private function processExplicitIf(Expression $expression): ?Node
     {
-        /** @var BooleanAnd|BooleanOr $booleanExpr */
         $booleanExpr = $expression->expr;
+        assert($booleanExpr instanceof BooleanAnd || $booleanExpr instanceof BooleanOr);
 
         $leftStaticType = $this->getType($booleanExpr->left);
         if (! $leftStaticType->isBoolean()->yes()) {
@@ -102,10 +102,10 @@ CODE_SAMPLE
             return null;
         }
 
-        /** @var Expr $expr */
         $expr = $booleanExpr instanceof BooleanAnd
             ? $booleanExpr->left
             : $this->binaryOpManipulator->inverseNode($booleanExpr->left);
+        assert($expr instanceof Expr);
         $if = new If_($expr);
         $if->stmts[] = new Expression($booleanExpr->right);
 

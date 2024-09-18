@@ -203,8 +203,8 @@ CODE_SAMPLE
             return true;
         }
 
-        /** @var Variable $previousVar */
         $previousVar = $previousNode->var;
+        assert($previousVar instanceof Variable);
         if ($this->callAnalyzer->isNewInstance($previousVar)) {
             return true;
         }

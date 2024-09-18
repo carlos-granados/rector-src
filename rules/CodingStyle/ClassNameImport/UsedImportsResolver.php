@@ -31,8 +31,8 @@ final readonly class UsedImportsResolver
     {
         $usedImports = [];
 
-        /** @var Class_|null $class */
         $class = $this->betterNodeFinder->findFirstInstanceOf($stmts, Class_::class);
+        assert($class instanceof Class_ || $class === null);
 
         // add class itself
         // is not anonymous class

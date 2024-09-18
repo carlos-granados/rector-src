@@ -71,8 +71,8 @@ final class SimplifyArraySearchRector extends AbstractRector
             return null;
         }
 
-        /** @var FuncCall $funcCallExpr */
         $funcCallExpr = $twoNodeMatch->getFirstExpr();
+        assert($funcCallExpr instanceof FuncCall);
 
         $inArrayFuncCall = $this->nodeFactory->createFuncCall('in_array', $funcCallExpr->args);
 

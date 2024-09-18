@@ -63,8 +63,8 @@ final class SimplifyStrposLowerRector extends AbstractRector
             return null;
         }
 
-        /** @var FuncCall $innerFuncCall */
         $innerFuncCall = $firstArg->value;
+        assert($innerFuncCall instanceof FuncCall);
         if (! $this->isName($innerFuncCall, 'strtolower')) {
             return null;
         }

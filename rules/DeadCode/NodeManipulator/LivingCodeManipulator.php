@@ -82,8 +82,8 @@ final readonly class LivingCodeManipulator
         }
 
         if ($this->isBinaryOpWithoutChange($expr)) {
-            /** @var BinaryOp $binaryOp */
             $binaryOp = $expr;
+            assert($binaryOp instanceof BinaryOp);
             return $this->processBinary($binaryOp);
         }
 

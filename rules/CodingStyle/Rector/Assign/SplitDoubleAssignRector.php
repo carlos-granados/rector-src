@@ -108,8 +108,8 @@ CODE_SAMPLE
                 break;
             }
 
-            /** @var Expr $assign */
             $assign = $assign->expr;
+            assert($assign instanceof Expr);
         }
 
         return $expressions;

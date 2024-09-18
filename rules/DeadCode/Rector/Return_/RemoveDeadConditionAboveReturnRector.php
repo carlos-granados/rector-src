@@ -81,8 +81,8 @@ CODE_SAMPLE
                 continue;
             }
 
-            /** @var Scope $scope */
             $scope = $stmt->getAttribute(AttributeKey::SCOPE);
+            assert($scope instanceof Scope);
 
             /** @var If_ $previousNode */
             if ($this->sideEffectNodeDetector->detect($previousNode->cond, $scope)) {

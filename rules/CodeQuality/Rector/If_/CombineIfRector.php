@@ -78,8 +78,8 @@ CODE_SAMPLE
             return null;
         }
 
-        /** @var If_ $subIf */
         $subIf = $node->stmts[0];
+        assert($subIf instanceof If_);
 
         if ($this->hasVarTag($subIf)) {
             return null;

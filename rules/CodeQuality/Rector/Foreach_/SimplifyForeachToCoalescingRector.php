@@ -84,8 +84,8 @@ CODE_SAMPLE
             $foreachReturnOrAssign = $this->matchForeachReturnOrAssign($foreach);
 
             if ($foreachReturnOrAssign instanceof Expression) {
-                /** @var Assign $innerAssign */
                 $innerAssign = $foreachReturnOrAssign->expr;
+                assert($innerAssign instanceof Assign);
 
                 if (! $this->nodeComparator->areNodesEqual($foreach->valueVar, $innerAssign->expr)) {
                     return null;
@@ -204,11 +204,11 @@ CODE_SAMPLE
             return null;
         }
 
-        /** @var If_ $ifNode */
         $ifNode = $foreach->stmts[0];
+        assert($ifNode instanceof If_);
 
-        /** @var Identical $identicalNode */
         $identicalNode = $ifNode->cond;
+        assert($identicalNode instanceof Identical);
 
         if ($this->nodeComparator->areNodesEqual($identicalNode->left, $foreach->keyVar)) {
             $checkedNode = $identicalNode->right;
@@ -228,11 +228,11 @@ CODE_SAMPLE
 
     private function processForeachNodeWithAssignInside(Foreach_ $foreach, Assign $assign): ?Assign
     {
-        /** @var If_ $ifNode */
         $ifNode = $foreach->stmts[0];
+        assert($ifNode instanceof If_);
 
-        /** @var Identical $identicalNode */
         $identicalNode = $ifNode->cond;
+        assert($identicalNode instanceof Identical);
 
         if ($this->nodeComparator->areNodesEqual($identicalNode->left, $foreach->keyVar)) {
             $checkedNode = $assign->var;

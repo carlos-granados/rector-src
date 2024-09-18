@@ -161,10 +161,10 @@ CODE_SAMPLE
     private function resolveValue(Expr $expr): Expr
     {
         if ($expr instanceof FuncCall && $this->isIteratorToArrayFuncCall($expr)) {
-            /** @var Arg $arg */
             $arg = $expr->args[0];
-            /** @var FuncCall $expr */
+            assert($arg instanceof Arg);
             $expr = $arg->value;
+            assert($expr instanceof FuncCall);
         }
 
         if (! $expr instanceof Ternary) {

@@ -42,14 +42,14 @@ final readonly class ConditionResolver
         $binaryClass = $expr::class;
 
         if ($this->isVersionCompareFuncCall($expr->left)) {
-            /** @var FuncCall $funcCall */
             $funcCall = $expr->left;
+            assert($funcCall instanceof FuncCall);
             return $this->resolveFuncCall($funcCall, $expr->right, $binaryClass);
         }
 
         if ($this->isVersionCompareFuncCall($expr->right)) {
-            /** @var FuncCall $funcCall */
             $funcCall = $expr->right;
+            assert($funcCall instanceof FuncCall);
 
             $versionCompareCondition = $this->resolveVersionCompareConditionForFuncCall($funcCall);
             if (! $versionCompareCondition instanceof VersionCompareCondition) {

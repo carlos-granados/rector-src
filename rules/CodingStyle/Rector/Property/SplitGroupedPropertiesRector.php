@@ -70,8 +70,8 @@ CODE_SAMPLE
             return null;
         }
 
-        /** @var PropertyProperty $firstPropertyProperty */
         $firstPropertyProperty = array_shift($allProperties);
+        assert($firstPropertyProperty instanceof PropertyProperty);
         $node->props = [$firstPropertyProperty];
 
         $nextProperties = [];

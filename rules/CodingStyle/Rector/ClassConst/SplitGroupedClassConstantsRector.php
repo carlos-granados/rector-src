@@ -62,8 +62,8 @@ CODE_SAMPLE
         /** @var Const_[] $allConsts */
         $allConsts = $node->consts;
 
-        /** @var Const_ $firstConst */
         $firstConst = array_shift($allConsts);
+        assert($firstConst instanceof Const_);
         $node->consts = [$firstConst];
 
         $nextClassConsts = $this->createNextClassConsts($allConsts, $node);

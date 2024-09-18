@@ -116,8 +116,8 @@ CODE_SAMPLE
 
             $currentArrayItem = current($arrayItems);
 
-            /** @var Expr $currentArrayItemKey */
             $currentArrayItemKey = $currentArrayItem->key;
+            assert($currentArrayItemKey instanceof Expr);
             if ($currentArrayItemKey instanceof PreInc) {
                 continue;
             }

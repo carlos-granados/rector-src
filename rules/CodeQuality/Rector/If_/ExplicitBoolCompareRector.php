@@ -218,12 +218,11 @@ CODE_SAMPLE
     {
         /**
          * // compare === ''
-         *
-         * @var Identical|NotIdentical $identical
          */
         $identical = $isNegated
             ? new Identical($expr, $string)
             : new NotIdentical($expr, $string);
+        assert($identical instanceof Identical || $identical instanceof NotIdentical);
 
         return $identical;
     }

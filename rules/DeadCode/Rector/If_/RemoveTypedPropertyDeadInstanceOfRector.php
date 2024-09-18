@@ -205,8 +205,8 @@ CODE_SAMPLE
 
     private function isInPropertyPromotedParams(Class_ $class, PropertyFetch|StaticPropertyFetch $propertyFetch): bool
     {
-        /** @var string $propertyName */
         $propertyName = $this->nodeNameResolver->getName($propertyFetch);
+        assert(is_string($propertyName));
         $params = $this->promotedPropertyResolver->resolveFromClass($class);
 
         foreach ($params as $param) {

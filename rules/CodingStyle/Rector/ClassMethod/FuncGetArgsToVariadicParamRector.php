@@ -90,8 +90,8 @@ CODE_SAMPLE
             }
 
             if ($assign->var instanceof Variable) {
-                /** @var string $variableName */
                 $variableName = $this->getName($assign->var);
+                assert(is_string($variableName));
                 unset($node->stmts[$key]);
 
                 return $this->applyVariadicParams($node, $variableName);
@@ -147,8 +147,8 @@ CODE_SAMPLE
                 return false;
             }
 
-            /** @var Assign $assign */
             $assign = $expression->expr;
+            assert($assign instanceof Assign);
             return $this->nodeComparator->areNodesEqual($assign->var, $variable);
         });
     }

@@ -113,8 +113,8 @@ CODE_SAMPLE
             return null;
         }
 
-        /** @var Array_ $arrayNode */
         $arrayNode = $funcCall->args[1]->value;
+        assert($arrayNode instanceof Array_);
         if (count($arrayNode->items) !== 1) {
             return null;
         }

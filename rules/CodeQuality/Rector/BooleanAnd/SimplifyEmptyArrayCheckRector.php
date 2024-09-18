@@ -53,14 +53,14 @@ final class SimplifyEmptyArrayCheckRector extends AbstractRector
             return null;
         }
 
-        /** @var FuncCall $isArrayExpr */
         $isArrayExpr = $twoNodeMatch->getFirstExpr();
+        assert($isArrayExpr instanceof FuncCall);
 
         $firstArgValue = $isArrayExpr->getArgs()[0]
 ->value;
 
-        /** @var Empty_ $emptyOrNotIdenticalNode */
         $emptyOrNotIdenticalNode = $twoNodeMatch->getSecondExpr();
+        assert($emptyOrNotIdenticalNode instanceof Empty_);
 
         if ($emptyOrNotIdenticalNode->expr instanceof FuncCall && $this->nodeComparator->areNodesEqual(
             $emptyOrNotIdenticalNode->expr->getArgs()[0]

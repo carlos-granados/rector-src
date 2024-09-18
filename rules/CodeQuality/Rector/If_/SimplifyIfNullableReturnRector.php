@@ -111,11 +111,11 @@ CODE_SAMPLE
                 continue;
             }
 
-            /** @var BooleanNot|Instanceof_ $cond */
             $cond = $if->cond;
+            assert($cond instanceof BooleanNot || $cond instanceof Instanceof_);
 
-            /** @var Instanceof_ $instanceof */
             $instanceof = $cond instanceof BooleanNot ? $cond->expr : $cond;
+            assert($instanceof instanceof Instanceof_);
 
             // @todo allow property as well
             $variable = $instanceof->expr;
@@ -126,8 +126,8 @@ CODE_SAMPLE
                 continue;
             }
 
-            /** @var Return_ $returnIfStmt */
             $returnIfStmt = $if->stmts[0];
+            assert($returnIfStmt instanceof Return_);
 
             if ($this->isIfStmtReturnIncorrect($cond, $variable, $returnIfStmt)) {
                 continue;

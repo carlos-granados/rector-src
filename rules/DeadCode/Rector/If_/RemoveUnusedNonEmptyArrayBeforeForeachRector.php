@@ -104,8 +104,8 @@ CODE_SAMPLE
             return false;
         }
 
-        /** @var Foreach_ $foreach */
         $foreach = $if->stmts[0];
+        assert($foreach instanceof Foreach_);
         $foreachExpr = $foreach->expr;
 
         if ($this->shouldSkipForeachExpr($foreachExpr, $scope)) {
@@ -178,8 +178,8 @@ CODE_SAMPLE
                 continue;
             }
 
-            /** @var Empty_ $empty */
             $empty = $previousStmt->cond;
+            assert($empty instanceof Empty_);
             // scope need to be pulled from Empty_ node to ensure it get correct type
             $scope = $empty->getAttribute(AttributeKey::SCOPE);
             if (! $scope instanceof Scope) {
@@ -204,8 +204,8 @@ CODE_SAMPLE
             return null;
         }
 
-        /** @var Foreach_ $stmt */
         $stmt = $if->stmts[0];
+        assert($stmt instanceof Foreach_);
 
         $ifComments = $if->getAttribute(AttributeKey::COMMENTS) ?? [];
         $stmtComments = $stmt->getAttribute(AttributeKey::COMMENTS) ?? [];
