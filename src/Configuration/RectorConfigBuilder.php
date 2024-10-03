@@ -93,6 +93,8 @@ final class RectorConfigBuilder
 
     private bool $removeUnusedImports = false;
 
+    private bool $importInsertSorted = false;
+
     private bool $noDiffs = false;
 
     private ?string $memoryLimit = null;
@@ -258,7 +260,7 @@ final class RectorConfigBuilder
         }
 
         if ($this->importNames || $this->importDocBlockNames) {
-            $rectorConfig->importNames($this->importNames, $this->importDocBlockNames);
+            $rectorConfig->importNames($this->importNames, $this->importDocBlockNames, $this->importInsertSorted);
             $rectorConfig->importShortClasses($this->importShortClasses);
         }
 
@@ -861,12 +863,14 @@ final class RectorConfigBuilder
         bool $importNames = true,
         bool $importDocBlockNames = true,
         bool $importShortClasses = true,
-        bool $removeUnusedImports = false
+        bool $removeUnusedImports = false,
+        bool $importInsertSorted = false,
     ): self {
         $this->importNames = $importNames;
         $this->importDocBlockNames = $importDocBlockNames;
         $this->importShortClasses = $importShortClasses;
         $this->removeUnusedImports = $removeUnusedImports;
+        $this->importInsertSorted = $importInsertSorted;
         return $this;
     }
 
