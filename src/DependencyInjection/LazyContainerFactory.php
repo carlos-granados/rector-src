@@ -10,6 +10,7 @@ use Illuminate\Container\Container;
 use PhpParser\Lexer;
 use PHPStan\Analyser\NodeScopeResolver;
 use PHPStan\Analyser\ScopeFactory;
+use PHPStan\Dependency\DependencyResolver;
 use PHPStan\Parser\Parser;
 use PHPStan\PhpDoc\TypeNodeResolver;
 use PHPStan\PhpDocParser\Parser\ConstExprParser;
@@ -320,6 +321,7 @@ final class LazyContainerFactory
         NodeScopeResolver::class,
         ReflectionProvider::class,
         CachingVisitor::class,
+        DependencyResolver::class,
     ];
 
     /**
