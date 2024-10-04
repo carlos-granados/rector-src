@@ -19,6 +19,7 @@ final readonly class Skipper
         private RectifiedAnalyzer $rectifiedAnalyzer,
         private PathSkipper $pathSkipper,
         private ClassSkipVoter $classSkipVoter,
+        private CommentSkipper $commentSkipper,
     ) {
     }
 
@@ -54,6 +55,10 @@ final readonly class Skipper
             return true;
         }
 
-        return $this->rectifiedAnalyzer->hasRectified($rectorClass, $node);
+        if ($this->rectifiedAnalyzer->hasRectified($rectorClass, $node)) {
+            return true;
+        }
+
+        return $this->commentSkipper->shouldSkip($rectorClass, $node);
     }
 }
