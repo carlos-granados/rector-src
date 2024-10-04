@@ -1,4 +1,4 @@
-# builds the content of https://github.com/rectorphp/rector
+# builds the content of https://github.com/carlos-granados/rector
 # inspiration from https://github.com/phpstan/phpstan-src/blob/master/.github/workflows/phar.yml
 name: Build Scoped Rector
 
@@ -16,17 +16,17 @@ env:
 jobs:
     build_scoped_rector:
         # Don't run on forks.
-        if: github.repository == 'rectorphp/rector-src'
+        if: github.repository == 'carlos-granados/rector-src'
 
         runs-on: ubuntu-latest
         timeout-minutes: 10
 
         steps:
-            # sometime, when 2 or more consecutive PRs merged, the checkout rectorphp/rector-src is overlapped
+            # sometime, when 2 or more consecutive PRs merged, the checkout carlos-granados/rector-src is overlapped
             # and reverting other commit change
             # this should not happen on create a tag, so wait first
             -
-                name: "Wait before checkout rectorphp/rector-src on create a tag"
+                name: "Wait before checkout carlos-granados/rector-src on create a tag"
                 if: "startsWith(github.ref, 'refs/tags/')"
                 run: sleep 20
 
@@ -86,7 +86,7 @@ jobs:
             -
                 uses: "actions/checkout@v4"
                 with:
-                    repository: rectorphp/rector
+                    repository: carlos-granados/rector
                     path: remote-repository
                     token: ${{ secrets.ACCESS_TOKEN }}
 
@@ -101,8 +101,8 @@ jobs:
             -
                 working-directory: remote-repository
                 run: |
-                    git config user.email "tomas.vot@gmail.com"
-                    git config user.name "Tomas Votruba"
+                    git config user.email "barel.barelon@gmail.com"
+                    git config user.name "Carlos Granados"
 
             # commit metadata
             -
@@ -110,7 +110,7 @@ jobs:
                 id: git-log
                 run: |
                     echo "log<<EOF" >> $GITHUB_OUTPUT
-                    echo "$(git log ${{ github.event.before }}..${{ github.event.after }} --reverse --pretty='https://github.com/rectorphp/rector-src/commit/%H %s')" >> $GITHUB_OUTPUT
+                    echo "$(git log ${{ github.event.before }}..${{ github.event.after }} --reverse --pretty='https://github.com/carlos-granados/rector-src/commit/%H %s')" >> $GITHUB_OUTPUT
                     echo 'EOF' >> $GITHUB_OUTPUT
 
             # 8.A publish it to remote repository without tag
