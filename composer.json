@@ -1,6 +1,6 @@
 {
-    "name": "rector/rector-src",
-    "description": "Instant Upgrade and Automated Refactoring of any PHP code",
+    "name": "carlos-granados/rector-src",
+    "description": "Instant Upgrade and Automated Refactoring of any PHP code (With extra features)",
     "bin": [
         "bin/rector"
     ],
