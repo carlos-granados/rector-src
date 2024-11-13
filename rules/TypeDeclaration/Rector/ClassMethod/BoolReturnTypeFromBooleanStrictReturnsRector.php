@@ -29,10 +29,10 @@ use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Return_;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;
-use PHPStan\Type\BooleanType;
 use Rector\PhpParser\Node\BetterNodeFinder;
 use Rector\PhpParser\Node\Value\ValueResolver;
-use Rector\Rector\AbstractScopeAwareRector;
+use Rector\PHPStan\ScopeFetcher;
+use Rector\Rector\AbstractRector;
 use Rector\TypeDeclaration\NodeAnalyzer\ReturnAnalyzer;
 use Rector\ValueObject\PhpVersionFeature;
 use Rector\VendorLocker\NodeVendorLocker\ClassMethodReturnTypeOverrideGuard;
@@ -43,7 +43,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\TypeDeclaration\Rector\ClassMethod\BoolReturnTypeFromBooleanStrictReturnsRector\BoolReturnTypeFromBooleanStrictReturnsRectorTest
  */
-final class BoolReturnTypeFromBooleanStrictReturnsRector extends AbstractScopeAwareRector implements MinPhpVersionInterface
+final class BoolReturnTypeFromBooleanStrictReturnsRector extends AbstractRector implements MinPhpVersionInterface
 {
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
@@ -93,8 +93,9 @@ CODE_SAMPLE
     /**
      * @param ClassMethod|Function_ $node
      */
-    public function refactorWithScope(Node $node, Scope $scope): ?Node
+    public function refactor(Node $node): ?Node
     {
+        $scope = ScopeFetcher::fetch($node);
         if ($this->shouldSkip($node, $scope)) {
             return null;
         }
@@ -181,10 +182,12 @@ CODE_SAMPLE
         }
 
         foreach ($functionReflection->getVariants() as $parametersAcceptorWithPhpDoc) {
-            return $parametersAcceptorWithPhpDoc->getNativeReturnType() instanceof BooleanType;
+            if (! $parametersAcceptorWithPhpDoc->getNativeReturnType()->isBoolean()->yes()) {
+                return false;
+            }
         }
 
-        return false;
+        return true;
     }
 
     private function isBooleanOp(Expr $expr): bool

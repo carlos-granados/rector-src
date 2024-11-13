@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Rector\PHPStanStaticTypeMapper\Utils;
 
-use PHPStan\Type\CallableType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
-use PHPStan\Type\TypeWithClassName;
 use PHPStan\Type\UnionType;
+use Rector\StaticTypeMapper\Resolver\ClassNameFromObjectTypeResolver;
 
 final class TypeUnwrapper
 {
@@ -19,7 +18,8 @@ final class TypeUnwrapper
         }
 
         foreach ($type->getTypes() as $unionedType) {
-            if (! $unionedType instanceof TypeWithClassName) {
+            $className = ClassNameFromObjectTypeResolver::resolve($unionedType);
+            if ($className === null) {
                 continue;
             }
 
@@ -29,14 +29,14 @@ final class TypeUnwrapper
         return $type;
     }
 
-    public function unwrapFirstCallableTypeFromUnionType(Type $type): ?Type
+    public function unwrapFirstCallableTypeFromUnionType(Type $type): Type
     {
         if (! $type instanceof UnionType) {
             return $type;
         }
 
         foreach ($type->getTypes() as $unionedType) {
-            if (! $unionedType instanceof CallableType) {
+            if (! $unionedType->isCallable()->yes()) {
                 continue;
             }
 
@@ -48,7 +48,8 @@ final class TypeUnwrapper
 
     public function isIterableTypeValue(string $className, Type $type): bool
     {
-        if (! $type instanceof TypeWithClassName) {
+        $typeClassName = ClassNameFromObjectTypeResolver::resolve($type);
+        if ($typeClassName === null) {
             return false;
         }
 
@@ -56,15 +57,16 @@ final class TypeUnwrapper
         $classNamespace = $this->namespace($className);
 
         // get the namespace from $parameterReflection
-        $reflectionNamespace = $this->namespace($type->getClassName());
+        $reflectionNamespace = $this->namespace($typeClassName);
 
         // then match with
-        return $reflectionNamespace === $classNamespace && str_ends_with($type->getClassName(), '\TValue');
+        return $reflectionNamespace === $classNamespace && str_ends_with($typeClassName, '\TValue');
     }
 
     public function isIterableTypeKey(string $className, Type $type): bool
     {
-        if (! $type instanceof TypeWithClassName) {
+        $typeClassName = ClassNameFromObjectTypeResolver::resolve($type);
+        if ($typeClassName === null) {
             return false;
         }
 
@@ -72,10 +74,10 @@ final class TypeUnwrapper
         $classNamespace = $this->namespace($className);
 
         // get the namespace from $parameterReflection
-        $reflectionNamespace = $this->namespace($type->getClassName());
+        $reflectionNamespace = $this->namespace($typeClassName);
 
         // then match with
-        return $reflectionNamespace === $classNamespace && str_ends_with($type->getClassName(), '\TKey');
+        return $reflectionNamespace === $classNamespace && str_ends_with($typeClassName, '\TKey');
     }
 
     public function removeNullTypeFromUnionType(UnionType $unionType): Type
