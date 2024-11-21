@@ -16,7 +16,7 @@ use PhpParser\Node\Expr\BinaryOp\SmallerOrEqual;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
-use PhpParser\Node\Scalar\LNumber;
+use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
 use Rector\Rector\AbstractRector;
 use Rector\Util\PhpVersionFactory;
@@ -135,7 +135,7 @@ CODE_SAMPLE
         return $expr->name->toString() === 'PHP_VERSION';
     }
 
-    private function getNewNodeForArg(Expr $expr): ConstFetch | LNumber | null
+    private function getNewNodeForArg(Expr $expr): ConstFetch | Int_ | null
     {
         if ($this->isPhpVersionConstant($expr)) {
             return new ConstFetch(new Name('PHP_VERSION_ID'));
@@ -144,13 +144,13 @@ CODE_SAMPLE
         return $this->getVersionNumberFormVersionString($expr);
     }
 
-    private function getVersionNumberFormVersionString(Expr $expr): ?LNumber
+    private function getVersionNumberFormVersionString(Expr $expr): ?Int_
     {
         if (! $expr instanceof String_) {
             return null;
         }
 
         $value = PhpVersionFactory::createIntVersion($expr->value);
-        return new LNumber($value);
+        return new Int_($value);
     }
 }

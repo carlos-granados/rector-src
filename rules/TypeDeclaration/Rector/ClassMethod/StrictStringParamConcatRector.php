@@ -17,7 +17,7 @@ use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
@@ -147,12 +147,12 @@ CODE_SAMPLE
         ): int|null {
             // skip nested class and function nodes
             if ($node instanceof FunctionLike || $node instanceof Class_) {
-                return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
+                return NodeVisitor::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
             }
 
             if ($node instanceof Assign && $node->var instanceof Variable && $this->isName($node->var, $paramName)) {
                 $variableConcatted = null;
-                return NodeTraverser::STOP_TRAVERSAL;
+                return NodeVisitor::STOP_TRAVERSAL;
             }
 
             $expr = $this->resolveAssignConcatVariable($node, $paramName);

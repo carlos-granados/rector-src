@@ -18,7 +18,7 @@ use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\While_;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use Rector\NodeManipulator\IfManipulator;
 use Rector\Php80\NodeAnalyzer\PromotedPropertyResolver;
 use Rector\Rector\AbstractRector;
@@ -105,7 +105,7 @@ CODE_SAMPLE
         ): int|null|array {
             // avoid loop ifs
             if ($node instanceof While_ || $node instanceof Foreach_ || $node instanceof For_ || $node instanceof Do_) {
-                return NodeTraverser::STOP_TRAVERSAL;
+                return NodeVisitor::STOP_TRAVERSAL;
             }
 
             if (! $node instanceof If_) {
@@ -174,11 +174,11 @@ CODE_SAMPLE
         }
 
         if ($if->cond !== $instanceof) {
-            return NodeTraverser::REMOVE_NODE;
+            return NodeVisitor::REMOVE_NODE;
         }
 
         if ($if->stmts === []) {
-            return NodeTraverser::REMOVE_NODE;
+            return NodeVisitor::REMOVE_NODE;
         }
 
         return $if->stmts;
@@ -200,7 +200,7 @@ CODE_SAMPLE
             return true;
         }
 
-        return $property->type === null;
+        return ! $property->type instanceof Node;
     }
 
     private function isInPropertyPromotedParams(Class_ $class, PropertyFetch|StaticPropertyFetch $propertyFetch): bool

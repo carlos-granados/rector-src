@@ -9,7 +9,7 @@ use PhpParser\Node\Stmt\Do_;
 use PhpParser\Node\Stmt\For_;
 use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\Node\Stmt\While_;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -66,6 +66,6 @@ CODE_SAMPLE
             return null;
         }
 
-        return NodeTraverser::REMOVE_NODE;
+        return NodeVisitor::REMOVE_NODE;
     }
 }

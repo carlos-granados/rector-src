@@ -8,12 +8,14 @@ use Nette\Utils\FileSystem;
 use Rector\Bridge\SetProviderCollector;
 use Rector\Bridge\SetRectorsResolver;
 use Rector\Caching\Contract\ValueObject\Storage\CacheStorageInterface;
+use Rector\Composer\InstalledPackageResolver;
 use Rector\Config\Level\CodeQualityLevel;
 use Rector\Config\Level\DeadCodeLevel;
 use Rector\Config\Level\TypeDeclarationLevel;
 use Rector\Config\RectorConfig;
 use Rector\Config\RegisteredService;
 use Rector\Configuration\Levels\LevelRulesResolver;
+use Rector\Configuration\Parameter\SimpleParameterProvider;
 use Rector\Console\Notifier;
 use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Contract\Rector\RectorInterface;
@@ -167,12 +169,11 @@ final class RectorConfigBuilder
 
     public function __invoke(RectorConfig $rectorConfig): void
     {
-        // @experimental 2024-06
         if ($this->setGroups !== []) {
-            $setProviderCollector = $rectorConfig->make(SetProviderCollector::class);
-            $setManager = new SetManager($setProviderCollector);
-
+            $setManager = new SetManager(new SetProviderCollector(), new InstalledPackageResolver(getcwd()));
             $this->groupLoadedSets = $setManager->matchBySetGroups($this->setGroups);
+
+            SimpleParameterProvider::addParameter(Option::COMPOSER_BASED_SETS, $this->groupLoadedSets);
         }
 
         // merge sets together
@@ -448,6 +449,11 @@ final class RectorConfigBuilder
         bool $sensiolabs = false,
         bool $all = false
     ): self {
+        // if nothing is passed, enable all as convention in other method
+        if (func_get_args() === []) {
+            $all = true;
+        }
+
         if ($symfony || $all) {
             $this->sets[] = SymfonySetList::ANNOTATIONS_TO_ATTRIBUTES;
         }
@@ -513,6 +519,7 @@ final class RectorConfigBuilder
         bool $php84 = false, // place on later as BC break when used in php 7.x without named arg
     ): self {
         $this->isWithPhpSetsUsed = true;
+        $this->withPhpPolyfill();
 
         $pickedArguments = array_filter(func_get_args());
         if ($pickedArguments !== []) {
@@ -706,79 +713,48 @@ final class RectorConfigBuilder
         bool $doctrineCodeQuality = false,
         bool $symfonyCodeQuality = false,
         bool $symfonyConfigs = false,
-        // composer based
-        bool $twig = false,
-        bool $phpunit = false,
     ): self {
         Notifier::notifyNotSuitableMethodForPHP74(__METHOD__);
 
-        if ($deadCode) {
-            $this->sets[] = SetList::DEAD_CODE;
+        $setMap = [
+            SetList::DEAD_CODE => $deadCode,
+            SetList::CODE_QUALITY => $codeQuality,
+            SetList::CODING_STYLE => $codingStyle,
+            SetList::TYPE_DECLARATION => $typeDeclarations,
+            SetList::PRIVATIZATION => $privatization,
+            SetList::NAMING => $naming,
+            SetList::INSTANCEOF => $instanceOf,
+            SetList::EARLY_RETURN => $earlyReturn,
+            SetList::STRICT_BOOLEANS => $strictBooleans,
+            SetList::CARBON => $carbon,
+            SetList::RECTOR_PRESET => $rectorPreset,
+            PHPUnitSetList::PHPUNIT_CODE_QUALITY => $phpunitCodeQuality,
+            DoctrineSetList::DOCTRINE_CODE_QUALITY => $doctrineCodeQuality,
+            SymfonySetList::SYMFONY_CODE_QUALITY => $symfonyCodeQuality,
+            SymfonySetList::CONFIGS => $symfonyConfigs,
+        ];
+
+        foreach ($setMap as $setPath => $isEnabled) {
+            if ($isEnabled) {
+                $this->sets[] = $setPath;
+            }
         }
 
-        if ($codeQuality) {
-            $this->sets[] = SetList::CODE_QUALITY;
-        }
+        return $this;
+    }
 
-        if ($codingStyle) {
-            $this->sets[] = SetList::CODING_STYLE;
-        }
+    public function withComposerBased(bool $twig = false, bool $doctrine = false, bool $phpunit = false): self
+    {
+        $setMap = [
+            SetGroup::TWIG => $twig,
+            SetGroup::DOCTRINE => $doctrine,
+            SetGroup::PHPUNIT => $phpunit,
+        ];
 
-        if ($typeDeclarations) {
-            $this->sets[] = SetList::TYPE_DECLARATION;
-        }
-
-        if ($privatization) {
-            $this->sets[] = SetList::PRIVATIZATION;
-        }
-
-        if ($naming) {
-            $this->sets[] = SetList::NAMING;
-        }
-
-        if ($instanceOf) {
-            $this->sets[] = SetList::INSTANCEOF;
-        }
-
-        if ($earlyReturn) {
-            $this->sets[] = SetList::EARLY_RETURN;
-        }
-
-        if ($strictBooleans) {
-            $this->sets[] = SetList::STRICT_BOOLEANS;
-        }
-
-        if ($carbon) {
-            $this->sets[] = SetList::CARBON;
-        }
-
-        if ($rectorPreset) {
-            $this->sets[] = SetList::RECTOR_PRESET;
-        }
-
-        if ($phpunitCodeQuality) {
-            $this->sets[] = PHPUnitSetList::PHPUNIT_CODE_QUALITY;
-        }
-
-        if ($doctrineCodeQuality) {
-            $this->sets[] = DoctrineSetList::DOCTRINE_CODE_QUALITY;
-        }
-
-        if ($symfonyCodeQuality) {
-            $this->sets[] = SymfonySetList::SYMFONY_CODE_QUALITY;
-        }
-
-        if ($symfonyConfigs) {
-            $this->sets[] = SymfonySetList::CONFIGS;
-        }
-
-        // @experimental 2024-06
-        if ($twig) {
-            $this->setGroups[] = SetGroup::TWIG;
-        }
-
-        if ($phpunit) {
-            $this->setGroups[] = SetGroup::PHPUNIT;
+        foreach ($setMap as $setPath => $isEnabled) {
+            if ($isEnabled) {
+                $this->setGroups[] = $setPath;
+            }
         }
 
         return $this;
@@ -932,12 +908,26 @@ final class RectorConfigBuilder
 
     public function withSymfonyContainerXml(string $symfonyContainerXmlFile): self
     {
+        if (! str_ends_with($symfonyContainerXmlFile, '.xml')) {
+            throw new InvalidConfigurationException(sprintf(
+                'Provided dumped Symfony container must have "xml" suffix. "%s" given',
+                $symfonyContainerXmlFile
+            ));
+        }
+
         $this->symfonyContainerXmlFile = $symfonyContainerXmlFile;
         return $this;
     }
 
     public function withSymfonyContainerPhp(string $symfonyContainerPhpFile): self
     {
+        if (! str_ends_with($symfonyContainerPhpFile, '.php')) {
+            throw new InvalidConfigurationException(sprintf(
+                'Provided dumped Symfony container must have "php" suffix. "%s" given',
+                $symfonyContainerPhpFile
+            ));
+        }
+
         $this->symfonyContainerPhpFile = $symfonyContainerPhpFile;
         return $this;
     }

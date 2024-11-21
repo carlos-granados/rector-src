@@ -14,7 +14,7 @@ use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use PHPStan\Analyser\Scope;
 use PHPStan\PhpDocParser\Ast\PhpDoc\GenericTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode;
@@ -150,7 +150,7 @@ CODE_SAMPLE
             return null;
         }
 
-        if ($property->type === null) {
+        if (! $property->type instanceof Node) {
             return null;
         }
 
@@ -209,7 +209,7 @@ CODE_SAMPLE
             return null;
         }
 
-        if ($param->type === null) {
+        if (! $param->type instanceof Node) {
             return null;
         }
 
@@ -262,7 +262,7 @@ CODE_SAMPLE
 
             if ($this->nodeComparator->areNodesEqual($propertyFetch, $node->var)) {
                 $isAssigned = true;
-                return NodeTraverser::STOP_TRAVERSAL;
+                return NodeVisitor::STOP_TRAVERSAL;
             }
 
             return null;

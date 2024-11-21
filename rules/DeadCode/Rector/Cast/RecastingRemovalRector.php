@@ -18,6 +18,7 @@ use PhpParser\Node\Expr\StaticCall;
 use PHPStan\Reflection\Php\PhpPropertyReflection;
 use PHPStan\Type\ArrayType;
 use PHPStan\Type\BooleanType;
+use PHPStan\Type\Constant\ConstantArrayType;
 use PHPStan\Type\FloatType;
 use PHPStan\Type\IntegerType;
 use PHPStan\Type\MixedType;
@@ -99,6 +100,18 @@ CODE_SAMPLE
         $nodeType = $this->nodeTypeResolver->getNativeType($node->expr);
         if ($nodeType instanceof MixedType) {
             return null;
+        }
+
+        if ($nodeType instanceof ConstantArrayType && $nodeClass === Array_::class) {
+            if ($this->shouldSkip($node->expr)) {
+                return null;
+            }
+
+            if ($this->shouldSkipCall($node->expr)) {
+                return null;
+            }
+
+            return $node->expr;
         }
 
         $sameNodeType = self::CAST_CLASS_TO_NODE_TYPE[$nodeClass];

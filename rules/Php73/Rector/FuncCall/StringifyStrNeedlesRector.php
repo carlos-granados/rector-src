@@ -8,7 +8,7 @@ use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\Cast\String_;
 use PhpParser\Node\Expr\FuncCall;
-use PhpParser\Node\Scalar\Encapsed;
+use PhpParser\Node\Scalar\InterpolatedString;
 use Rector\Rector\AbstractRector;
 use Rector\ValueObject\PhpVersionFeature;
 use Rector\VersionBonding\Contract\MinPhpVersionInterface;
@@ -91,7 +91,7 @@ CODE_SAMPLE
             return null;
         }
 
-        if ($needleArgValue instanceof Encapsed) {
+        if ($needleArgValue instanceof InterpolatedString) {
             return null;
         }
 

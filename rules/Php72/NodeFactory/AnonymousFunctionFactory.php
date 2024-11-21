@@ -6,17 +6,17 @@ namespace Rector\Php72\NodeFactory;
 
 use Nette\Utils\Strings;
 use PhpParser\Node;
+use PhpParser\Node\ClosureUse;
 use PhpParser\Node\ComplexType;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Closure;
-use PhpParser\Node\Expr\ClosureUse;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Param;
-use PhpParser\Node\Scalar\LNumber;
+use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Expression;
@@ -106,7 +106,7 @@ final readonly class AnonymousFunctionFactory
 
             $matchesVariable = new Variable('matches');
 
-            return new ArrayDimFetch($matchesVariable, new LNumber((int) $match['number']));
+            return new ArrayDimFetch($matchesVariable, new Int_((int) $match['number']));
         });
 
         $anonymousFunction->stmts[] = new Return_($stmt);

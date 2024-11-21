@@ -17,7 +17,7 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Function_;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\Type;
 use Rector\NodeTypeResolver\PHPStan\Type\TypeFactory;
@@ -138,17 +138,17 @@ CODE_SAMPLE
         ) use (&$yieldNodes): ?int {
             // skip anonymous class and inner function
             if ($node instanceof Class_) {
-                return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
+                return NodeVisitor::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
             }
 
             // skip nested scope
             if ($node instanceof FunctionLike) {
-                return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
+                return NodeVisitor::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
             }
 
             if ($node instanceof Stmt && ! $node instanceof Expression) {
                 $yieldNodes = [];
-                return NodeTraverser::STOP_TRAVERSAL;
+                return NodeVisitor::STOP_TRAVERSAL;
             }
 
             if (! $node instanceof Yield_ && ! $node instanceof YieldFrom) {

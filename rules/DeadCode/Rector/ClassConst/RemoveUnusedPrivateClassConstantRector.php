@@ -6,7 +6,7 @@ namespace Rector\DeadCode\Rector\ClassConst;
 
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassConst;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use PHPStan\Reflection\ClassReflection;
 use Rector\NodeManipulator\ClassConstManipulator;
 use Rector\PHPStan\ScopeFetcher;
@@ -79,7 +79,7 @@ CODE_SAMPLE
             return null;
         }
 
-        return NodeTraverser::REMOVE_NODE;
+        return NodeVisitor::REMOVE_NODE;
     }
 
     private function shouldSkipClassConst(ClassConst $classConst): bool

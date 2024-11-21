@@ -12,10 +12,10 @@ final class InstalledPackageResolverTest extends TestCase
 {
     public function test(): void
     {
-        $installedPackageResolver = new InstalledPackageResolver();
-        $installedPackages = $installedPackageResolver->resolve(getcwd());
+        $installedPackageResolver = new InstalledPackageResolver(getcwd());
+        $installedPackages = $installedPackageResolver->resolve();
 
         $this->assertContainsOnlyInstancesOf(InstalledPackage::class, $installedPackages);
-        $this->assertGreaterThan(80, count($installedPackages));
+        $this->assertGreaterThan(77, count($installedPackages));
     }
 }

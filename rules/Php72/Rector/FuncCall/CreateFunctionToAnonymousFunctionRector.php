@@ -13,7 +13,7 @@ use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
 use PhpParser\Node\Param;
-use PhpParser\Node\Scalar\Encapsed;
+use PhpParser\Node\Scalar\InterpolatedString;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Expression;
@@ -154,7 +154,7 @@ CODE_SAMPLE
      */
     private function parseStringToBody(Expr $expr): array
     {
-        if (! $expr instanceof String_ && ! $expr instanceof Encapsed && ! $expr instanceof Concat) {
+        if (! $expr instanceof String_ && ! $expr instanceof InterpolatedString && ! $expr instanceof Concat) {
             // special case of code elsewhere
             return [$this->createEval($expr)];
         }

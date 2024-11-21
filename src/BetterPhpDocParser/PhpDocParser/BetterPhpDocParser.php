@@ -14,9 +14,11 @@ use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTextNode;
 use PHPStan\PhpDocParser\Lexer\Lexer;
 use PHPStan\PhpDocParser\Parser\ConstExprParser;
+use PHPStan\PhpDocParser\Parser\ParserException;
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
 use PHPStan\PhpDocParser\Parser\TokenIterator;
 use PHPStan\PhpDocParser\Parser\TypeParser;
+use PHPStan\PhpDocParser\ParserConfig;
 use Rector\BetterPhpDocParser\Contract\PhpDocParser\PhpDocNodeDecoratorInterface;
 use Rector\BetterPhpDocParser\PhpDocInfo\TokenIteratorFactory;
 use Rector\BetterPhpDocParser\ValueObject\Parser\BetterTokenIterator;
@@ -46,6 +48,7 @@ final class BetterPhpDocParser extends PhpDocParser
      * @param PhpDocNodeDecoratorInterface[] $phpDocNodeDecorators
      */
     public function __construct(
+        ParserConfig $parserConfig,
         TypeParser $typeParser,
         ConstExprParser $constExprParser,
         private readonly TokenIteratorFactory $tokenIteratorFactory,
@@ -53,23 +56,12 @@ final class BetterPhpDocParser extends PhpDocParser
         private readonly PrivatesAccessor $privatesAccessor,
     ) {
         parent::__construct(
+            // ParserConfig
+            $parserConfig,
             // TypeParser
             $typeParser,
             // ConstExprParser
             $constExprParser,
-            // requireWhitespaceBeforeDescription
-            false,
-            // preserveTypeAliasesWithInvalidTypes
-            false,
-            // usedAttributes
-            [
-                'lines' => true,
-                'indexes' => true,
-            ],
-            // parseDoctrineAnnotations
-            false,
-            // textBetweenTagsBelongsToDescription, default to false, exists since 1.23.0
-            true
         );
     }
 
@@ -156,8 +148,13 @@ final class BetterPhpDocParser extends PhpDocParser
 
         $startPosition = $betterTokenIterator->currentPosition();
 
-        /** @var PhpDocTextNode|PhpDocTagNode $phpDocNode */
-        $phpDocNode = $this->privatesAccessor->callPrivateMethod($this, 'parseChild', [$betterTokenIterator]);
+        try {
+            /** @var PhpDocTextNode|PhpDocTagNode $phpDocNode */
+            $phpDocNode = $this->privatesAccessor->callPrivateMethod($this, 'parseChild', [$betterTokenIterator]);
+        } catch (ParserException) {
+            $phpDocNode = new PhpDocTextNode('');
+        }
+
         $endPosition = $betterTokenIterator->currentPosition();
 
         $startAndEnd = new StartAndEnd($startPosition, $endPosition);

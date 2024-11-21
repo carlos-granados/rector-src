@@ -10,7 +10,7 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\Node\Stmt\Function_;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use Rector\Naming\Guard\BreakingVariableRenameGuard;
 use Rector\Naming\Matcher\ForeachMatcher;
 use Rector\Naming\Naming\ExpectedNameResolver;
@@ -99,7 +99,7 @@ CODE_SAMPLE
             $node->stmts,
             function (Node $subNode) use ($node, &$hasRenamed): ?int {
                 if ($subNode instanceof Class_ || $subNode instanceof Closure || $subNode instanceof Function_) {
-                    return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
+                    return NodeVisitor::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
                 }
 
                 if (! $subNode instanceof Foreach_) {

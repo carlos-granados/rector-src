@@ -12,7 +12,7 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Return_;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use Rector\NodeAnalyzer\ExprAnalyzer;
 use Rector\Rector\AbstractRector;
 use Rector\ValueObject\MethodName;
@@ -104,7 +104,7 @@ CODE_SAMPLE
             &$hasChanged
         ): int|null|array|Return_ {
             if ($subNode instanceof Class_ || $subNode instanceof Function_ || $subNode instanceof Closure) {
-                return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
+                return NodeVisitor::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
             }
 
             if (! $subNode instanceof Return_) {

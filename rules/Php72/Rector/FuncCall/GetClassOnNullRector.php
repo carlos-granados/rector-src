@@ -10,7 +10,7 @@ use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\Ternary;
 use PhpParser\Node\Stmt\Class_;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\Rector\AbstractRector;
 use Rector\ValueObject\PhpVersionFeature;
@@ -74,7 +74,7 @@ CODE_SAMPLE
 
         $this->traverseNodesWithCallable($node, function (Node $node) use (&$hasChanged): int|null|Ternary {
             if ($node instanceof Ternary) {
-                return NodeTraverser::STOP_TRAVERSAL;
+                return NodeVisitor::STOP_TRAVERSAL;
             }
 
             if (! $node instanceof FuncCall) {

@@ -14,12 +14,12 @@ use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Param;
+use PhpParser\Node\PropertyItem;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Const_;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\Node\Stmt\PropertyProperty;
 use PhpParser\Node\Stmt\Trait_;
 use PHPStan\Analyser\Scope;
 use Rector\CodingStyle\Naming\ClassNaming;
@@ -94,7 +94,7 @@ final class NodeNameResolver
      * @return ($node is Param ? string :
      *  ($node is ClassMethod ? string :
      *  ($node is Property ? string :
-     *  ($node is PropertyProperty ? string :
+     *  ($node is PropertyItem ? string :
      *  ($node is Trait_ ? string :
      *  ($node is Interface_ ? string :
      *  ($node is Const_ ? string :

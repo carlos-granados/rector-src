@@ -13,8 +13,8 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Use_;
-use PhpParser\Node\Stmt\UseUse;
-use PhpParser\NodeTraverser;
+use PhpParser\Node\UseItem;
+use PhpParser\NodeVisitor;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser;
@@ -94,7 +94,7 @@ final class UnusedImportRemovingPostRector extends AbstractPostRector
             &$names
         ): int|null|Name {
             if ($node instanceof Use_) {
-                return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
+                return NodeVisitor::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
             }
 
             if (! $node instanceof Name) {
@@ -177,11 +177,15 @@ final class UnusedImportRemovingPostRector extends AbstractPostRector
     /**
      * @param string[] $names
      */
-    private function isUseImportUsed(UseUse $useUse, bool $isCaseSensitive, array $names, ?string $namespaceName): bool
-    {
-        $comparedName = $useUse->alias instanceof Identifier
-            ? $useUse->alias->toString()
-            : $useUse->name->toString();
+    private function isUseImportUsed(
+        UseItem $useItem,
+        bool $isCaseSensitive,
+        array $names,
+        ?string $namespaceName
+    ): bool {
+        $comparedName = $useItem->alias instanceof Identifier
+            ? $useItem->alias->toString()
+            : $useItem->name->toString();
 
         if (! $isCaseSensitive) {
             $comparedName = strtolower($comparedName);

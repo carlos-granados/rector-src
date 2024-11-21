@@ -10,15 +10,18 @@ use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt;
+use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\NodeFinder;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use PHPStan\Type\ObjectType;
 use Rector\NodeAnalyzer\PropertyFetchAnalyzer;
+use Rector\NodeDecorator\StatementDepthAttributeDecorator;
+use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\NodeTypeResolver;
 use Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser;
 use Rector\PhpParser\Comparing\NodeComparator;
@@ -28,11 +31,6 @@ use Rector\ValueObject\MethodName;
 
 final readonly class ConstructorAssignDetector
 {
-    /**
-     * @var string
-     */
-    private const IS_FIRST_LEVEL_STATEMENT = 'first_level_stmt';
-
     public function __construct(
         private NodeTypeResolver $nodeTypeResolver,
         private PropertyAssignMatcher $propertyAssignMatcher,
@@ -43,7 +41,12 @@ final readonly class ConstructorAssignDetector
     ) {
     }
 
-    public function isPropertyAssigned(ClassLike $classLike, string $propertyName): bool
+    public function isPropertyAssignedConditionally(Class_ $class, string $propertyName): bool
+    {
+        return $this->isPropertyAssigned($class, $propertyName, true);
+    }
+
+    public function isPropertyAssigned(ClassLike $classLike, string $propertyName, bool $allowConditional = false): bool
     {
         $initializeClassMethods = $this->matchInitializeClassMethod($classLike);
         if ($initializeClassMethods === []) {
@@ -52,15 +55,15 @@ final readonly class ConstructorAssignDetector
 
         $isAssignedInConstructor = false;
 
-        $this->decorateFirstLevelStatementAttribute($initializeClassMethods);
+        StatementDepthAttributeDecorator::decorateClassMethods($initializeClassMethods);
 
         foreach ($initializeClassMethods as $initializeClassMethod) {
             $this->simpleCallableNodeTraverser->traverseNodesWithCallable((array) $initializeClassMethod->stmts, function (
                 Node $node
-            ) use ($propertyName, &$isAssignedInConstructor): ?int {
+            ) use ($propertyName, &$isAssignedInConstructor, $allowConditional): ?int {
                 if ($this->isIfElseAssign($node, $propertyName)) {
                     $isAssignedInConstructor = true;
-                    return NodeTraverser::STOP_TRAVERSAL;
+                    return NodeVisitor::STOP_TRAVERSAL;
                 }
 
                 $expr = $this->matchAssignExprToPropertyName($node, $propertyName);
@@ -74,19 +77,24 @@ final readonly class ConstructorAssignDetector
                 // is merged in assign?
                 if ($this->isPropertyUsedInAssign($assign, $propertyName)) {
                     $isAssignedInConstructor = false;
-                    return NodeTraverser::STOP_TRAVERSAL;
+                    return NodeVisitor::STOP_TRAVERSAL;
                 }
 
-                $isFirstLevelStatement = $assign->getAttribute(self::IS_FIRST_LEVEL_STATEMENT);
+                $isFirstLevelStatement = $assign->getAttribute(AttributeKey::IS_FIRST_LEVEL_STATEMENT);
 
                 // cannot be nested
                 if ($isFirstLevelStatement !== true) {
+                    if ($allowConditional) {
+                        $isAssignedInConstructor = true;
+                        return NodeVisitor::STOP_TRAVERSAL;
+                    }
+
                     return null;
                 }
 
                 $isAssignedInConstructor = true;
 
-                return NodeTraverser::STOP_TRAVERSAL;
+                return NodeVisitor::STOP_TRAVERSAL;
             });
         }
 
@@ -137,22 +145,6 @@ final readonly class ConstructorAssignDetector
         }
 
         return $this->propertyAssignMatcher->matchPropertyAssignExpr($node, $propertyName);
-    }
-
-    /**
-     * @param ClassMethod[] $classMethods
-     */
-    private function decorateFirstLevelStatementAttribute(array $classMethods): void
-    {
-        foreach ($classMethods as $classMethod) {
-            foreach ((array) $classMethod->stmts as $methodStmt) {
-                $methodStmt->setAttribute(self::IS_FIRST_LEVEL_STATEMENT, true);
-
-                if ($methodStmt instanceof Expression) {
-                    $methodStmt->expr->setAttribute(self::IS_FIRST_LEVEL_STATEMENT, true);
-                }
-            }
-        }
     }
 
     /**

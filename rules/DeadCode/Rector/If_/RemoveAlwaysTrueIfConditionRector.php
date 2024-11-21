@@ -17,7 +17,7 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\If_;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use PHPStan\Type\IntersectionType;
 use Rector\DeadCode\NodeAnalyzer\SafeLeftTypeBooleanAndOrAnalyzer;
 use Rector\NodeAnalyzer\ExprAnalyzer;
@@ -98,7 +98,7 @@ CODE_SAMPLE
             return null;
         }
 
-        $conditionStaticType = $this->getType($node->cond);
+        $conditionStaticType = $this->nodeTypeResolver->getNativeType($node->cond);
         if (! $conditionStaticType->isTrue()->yes()) {
             return null;
         }
@@ -117,7 +117,7 @@ CODE_SAMPLE
         }
 
         if ($node->stmts === []) {
-            return NodeTraverser::REMOVE_NODE;
+            return NodeVisitor::REMOVE_NODE;
         }
 
         return $node->stmts;
@@ -133,7 +133,7 @@ CODE_SAMPLE
                 return true;
             }
 
-            $type = $this->getType($variable);
+            $type = $this->nodeTypeResolver->getNativeType($variable);
             if ($type instanceof IntersectionType) {
                 foreach ($type->getTypes() as $subType) {
                     if ($subType->isArray()->yes()) {

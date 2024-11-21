@@ -15,7 +15,7 @@ use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\BooleanNot;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\UnaryMinus;
-use PhpParser\Node\Scalar\LNumber;
+use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
 use Rector\NodeAnalyzer\BinaryOpAnalyzer;
 use Rector\PhpParser\Node\Value\ValueResolver;
@@ -239,7 +239,7 @@ CODE_SAMPLE
             return false;
         }
 
-        if (! $substrOffset->expr instanceof LNumber) {
+        if (! $substrOffset->expr instanceof Int_) {
             return false;
         }
 

@@ -16,7 +16,7 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\TryCatch;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use PHPStan\Analyser\Scope;
 use PHPStan\Type\ObjectType;
 use Rector\Naming\Naming\PropertyNaming;
@@ -232,7 +232,7 @@ CODE_SAMPLE
             &$nonAssignedVariables
         ): ?int {
             if ($node instanceof Assign && $node->var instanceof Variable) {
-                return NodeTraverser::STOP_TRAVERSAL;
+                return NodeVisitor::STOP_TRAVERSAL;
             }
 
             if (! $node instanceof Variable) {

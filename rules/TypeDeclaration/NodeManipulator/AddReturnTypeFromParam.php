@@ -16,7 +16,7 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Return_;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use PHPStan\Analyser\Scope;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\TypeCombinator;
@@ -88,7 +88,7 @@ final readonly class AddReturnTypeFromParam
             // skip scope nesting
             if ($node instanceof Class_ || $node instanceof FunctionLike) {
                 $return = null;
-                return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
+                return NodeVisitor::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
             }
 
             if (! $node instanceof Return_) {
@@ -97,7 +97,7 @@ final readonly class AddReturnTypeFromParam
 
             if (! $node->expr instanceof Variable) {
                 $return = null;
-                return NodeTraverser::STOP_TRAVERSAL;
+                return NodeVisitor::STOP_TRAVERSAL;
             }
 
             $return = $node;
@@ -121,12 +121,12 @@ final readonly class AddReturnTypeFromParam
         ): int|null {
             // skip scope nesting
             if ($node instanceof Class_ || $node instanceof FunctionLike) {
-                return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
+                return NodeVisitor::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
             }
 
             if ($node instanceof AssignRef && $this->nodeNameResolver->isName($node->expr, $paramName)) {
                 $isParamModified = true;
-                return NodeTraverser::STOP_TRAVERSAL;
+                return NodeVisitor::STOP_TRAVERSAL;
             }
 
             if (! $node instanceof Assign) {
@@ -142,7 +142,7 @@ final readonly class AddReturnTypeFromParam
             }
 
             $isParamModified = true;
-            return NodeTraverser::STOP_TRAVERSAL;
+            return NodeVisitor::STOP_TRAVERSAL;
         });
 
         return $isParamModified;

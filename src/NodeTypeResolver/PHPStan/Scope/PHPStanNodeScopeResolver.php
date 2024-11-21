@@ -6,9 +6,9 @@ namespace Rector\NodeTypeResolver\PHPStan\Scope;
 
 use PhpParser\Node;
 use PhpParser\Node\Arg;
+use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
-use PhpParser\Node\Expr\ArrayItem;
 use PhpParser\Node\Expr\ArrowFunction;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\AssignOp;
@@ -19,6 +19,7 @@ use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Expr\List_;
 use PhpParser\Node\Expr\Match_;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
@@ -58,6 +59,8 @@ use PHPStan\Analyser\NodeScopeResolver;
 use PHPStan\Analyser\ScopeContext;
 use PHPStan\Node\UnreachableStatementNode;
 use PHPStan\Node\VirtualNode;
+use PHPStan\Parser\ParserErrorsException;
+use PHPStan\PhpDocParser\Parser\ParserException;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\ObjectType;
@@ -211,7 +214,7 @@ final readonly class PHPStanNodeScopeResolver
             if ($node instanceof Foreach_) {
                 // decorate value as well
                 $node->valueVar->setAttribute(AttributeKey::SCOPE, $mutatingScope);
-                if ($node->valueVar instanceof Array_) {
+                if ($node->valueVar instanceof List_) {
                     $this->processArray($node->valueVar, $mutatingScope);
                 }
 
@@ -328,7 +331,13 @@ final readonly class PHPStanNodeScopeResolver
     ): void {
         try {
             $this->nodeScopeResolver->processNodes($stmts, $mutatingScope, $nodeCallback);
+        } catch (ParserErrorsException|ParserException) {
+            // nothing we can do more precise here as error parsing from deep internal PHPStan service with service injection we cannot reset
+            // in the middle of process
+            // fallback to fill by found scope
+            RectorNodeScopeResolver::processNodes($stmts, $mutatingScope);
         } catch (ShouldNotHappenException) {
+            // internal PHPStan error
         }
     }
 
@@ -353,7 +362,7 @@ final readonly class PHPStanNodeScopeResolver
         $assign->expr->setAttribute(AttributeKey::SCOPE, $mutatingScope);
     }
 
-    private function processArray(Array_ $array, MutatingScope $mutatingScope): void
+    private function processArray(List_|Array_ $array, MutatingScope $mutatingScope): void
     {
         foreach ($array->items as $arrayItem) {
             if ($arrayItem instanceof ArrayItem) {

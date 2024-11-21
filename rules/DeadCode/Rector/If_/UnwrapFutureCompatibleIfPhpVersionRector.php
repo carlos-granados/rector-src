@@ -8,7 +8,7 @@ use PhpParser\Node;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\If_;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use Rector\DeadCode\ConditionEvaluator;
 use Rector\DeadCode\ConditionResolver;
 use Rector\DeadCode\Contract\ConditionInterface;
@@ -110,7 +110,7 @@ CODE_SAMPLE
     {
         // no else → just remove the node
         if (! $if->else instanceof Else_) {
-            return NodeTraverser::REMOVE_NODE;
+            return NodeVisitor::REMOVE_NODE;
         }
 
         // else is always used

@@ -8,7 +8,7 @@ use PhpParser\Node;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Return_;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use PhpParser\NodeVisitorAbstract;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\PHPStan\Scope\Contract\NodeVisitor\ScopeResolverNodeVisitorInterface;
@@ -40,7 +40,7 @@ final class ByRefReturnNodeVisitor extends NodeVisitorAbstract implements ScopeR
             $stmts,
             static function (Node $node): int|null|Node {
                 if ($node instanceof Class_ || $node instanceof FunctionLike) {
-                    return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
+                    return NodeVisitor::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
                 }
 
                 if (! $node instanceof Return_) {

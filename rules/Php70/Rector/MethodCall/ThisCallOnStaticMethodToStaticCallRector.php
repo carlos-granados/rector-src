@@ -9,9 +9,9 @@ use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
-use PhpParser\Node\Scalar\Encapsed;
+use PhpParser\Node\Scalar\InterpolatedString;
 use PhpParser\Node\Stmt\Class_;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\Php\PhpMethodReflection;
 use Rector\Enum\ObjectReference;
@@ -122,8 +122,8 @@ CODE_SAMPLE
             $class,
             $classReflection
         ): null|StaticCall|int {
-            if ($subNode instanceof Encapsed) {
-                return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
+            if ($subNode instanceof InterpolatedString) {
+                return NodeVisitor::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
             }
 
             if (! $subNode instanceof MethodCall) {

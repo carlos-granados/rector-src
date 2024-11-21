@@ -6,6 +6,7 @@ namespace Rector\TypeDeclaration;
 
 use PHPStan\Type\ArrayType;
 use PHPStan\Type\Constant\ConstantArrayType;
+use PHPStan\Type\IntersectionType;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\NeverType;
 use PHPStan\Type\Type;
@@ -39,10 +40,15 @@ final class TypeNormalizer
      */
     public function normalizeArrayOfUnionToUnionArray(Type $type, int $arrayNesting = 1): Type
     {
-        if (! $type instanceof ArrayType) {
+        if (! $type->isArray()->yes()) {
             return $type;
         }
 
+        if ($type instanceof UnionType || $type instanceof IntersectionType) {
+            return $type;
+        }
+
+        /** @var ArrayType|ConstantArrayType $type */
         if ($type instanceof ConstantArrayType && $arrayNesting === 1) {
             return $type;
         }
@@ -78,9 +84,9 @@ final class TypeNormalizer
                 assert($traversedType instanceof ConstantArrayType);
 
                 // not sure why, but with direct new node everything gets nulled to MixedType
-                $this->privatesAccessor->setPrivateProperty($traversedType, 'keyType', new MixedType());
+                $this->privatesAccessor->setPrivateProperty($traversedType, 'keyTypes', [new MixedType()]);
 
-                $this->privatesAccessor->setPrivateProperty($traversedType, 'itemType', new MixedType());
+                $this->privatesAccessor->setPrivateProperty($traversedType, 'valueTypes', [new MixedType()]);
 
                 return $traversedType;
             }

@@ -12,6 +12,7 @@ use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PHPStan\Analyser\Scope;
+use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\PHPStan\Type\TypeFactory;
 use Rector\PhpParser\Node\BetterNodeFinder;
 use Rector\PHPStan\ScopeFetcher;
@@ -144,7 +145,7 @@ CODE_SAMPLE
     private function shouldSkipParam(Param $param, ClassMethod $classMethod): bool
     {
         // already has type, skip
-        if ($param->type !== null) {
+        if ($param->type instanceof Node) {
             return true;
         }
 
@@ -178,6 +179,11 @@ CODE_SAMPLE
 
                 $paramType = $this->callerParamMatcher->matchCallParamType($param, $matchCallParam);
                 if (! $paramType instanceof Node) {
+                    $paramTypes = [];
+                    break;
+                }
+
+                if ($caller->getAttribute(AttributeKey::IS_RIGHT_AND)) {
                     $paramTypes = [];
                     break;
                 }

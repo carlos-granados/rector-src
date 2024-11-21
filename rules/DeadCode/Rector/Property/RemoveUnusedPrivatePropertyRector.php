@@ -11,7 +11,7 @@ use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Return_;
 use PhpParser\Node\Stmt\TraitUse;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
@@ -170,7 +170,7 @@ CODE_SAMPLE
             }
 
             if ($node instanceof Expression) {
-                return NodeTraverser::REMOVE_NODE;
+                return NodeVisitor::REMOVE_NODE;
             }
 
             $node->expr = $node->expr->expr;

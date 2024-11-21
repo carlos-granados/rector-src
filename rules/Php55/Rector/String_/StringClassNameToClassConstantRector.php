@@ -11,7 +11,7 @@ use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\ClassConst;
-use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor;
 use PHPStan\Reflection\ReflectionProvider;
 use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
@@ -112,7 +112,7 @@ CODE_SAMPLE
         // keep allowed string as condition
         if ($node instanceof FuncCall) {
             if ($this->isName($node, 'is_a')) {
-                return NodeTraverser::DONT_TRAVERSE_CHILDREN;
+                return NodeVisitor::DONT_TRAVERSE_CHILDREN;
             }
 
             return null;
