@@ -101,6 +101,15 @@ final readonly class FilesFinder
     }
 
     /**
+     * @param string[] $allFiles
+     * @return string[]
+     */
+    public function filterUnchangedFiles(array $allFiles): array
+    {
+        return $this->unchangedFilesFilter->filterFilePaths($allFiles);
+    }
+
+    /**
      * @param string[] $paths
      * @return string[]
      */
