@@ -10,6 +10,8 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Expression;
+use PhpParser\Node\Stmt\Finally_;
+use PhpParser\Node\Stmt\TryCatch;
 use Rector\Contract\PhpParser\Node\StmtsAwareInterface;
 use Rector\DeadCode\NodeAnalyzer\ExprUsedInNodeAnalyzer;
 use Rector\NodeTypeResolver\Node\AttributeKey;
@@ -71,24 +73,34 @@ final readonly class StmtsManipulator
         return $stmts;
     }
 
-    /**
-     * @param StmtsAwareInterface|Stmt[] $stmtsAware
-     */
     public function isVariableUsedInNextStmt(
-        StmtsAwareInterface|array $stmtsAware,
+        StmtsAwareInterface $stmtsAware,
         int $jumpToKey,
         string $variableName
     ): bool {
-        if ($stmtsAware instanceof StmtsAwareInterface && $stmtsAware->stmts === null) {
+        if ($stmtsAware->stmts === null) {
             return false;
         }
 
-        $stmts = array_slice(
-            $stmtsAware instanceof StmtsAwareInterface ? $stmtsAware->stmts : $stmtsAware,
-            $jumpToKey,
-            null,
-            true
-        );
+        $lastKey = array_key_last($stmtsAware->stmts);
+        $stmts = [];
+
+        for ($key = $jumpToKey; $key <= $lastKey; ++$key) {
+            if (! isset($stmtsAware->stmts[$key])) {
+                // can be just removed
+                continue;
+            }
+
+            $stmts[] = $stmtsAware->stmts[$key];
+        }
+
+        if ($stmtsAware instanceof TryCatch) {
+            $stmts = array_merge($stmts, $stmtsAware->catches);
+
+            if ($stmtsAware->finally instanceof Finally_) {
+                $stmts = array_merge($stmts, $stmtsAware->finally->stmts);
+            }
+        }
 
         $variable = new Variable($variableName);
         return (bool) $this->betterNodeFinder->findFirst(

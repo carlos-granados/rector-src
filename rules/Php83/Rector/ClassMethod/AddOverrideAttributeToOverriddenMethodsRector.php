@@ -63,6 +63,7 @@ class ParentClass
 {
     public function foo()
     {
+        echo 'default';
     }
 }
 
@@ -70,6 +71,7 @@ final class ChildClass extends ParentClass
 {
     public function foo()
     {
+        echo 'override default';
     }
 }
 CODE_SAMPLE
@@ -79,6 +81,7 @@ class ParentClass
 {
     public function foo()
     {
+        echo 'default';
     }
 }
 
@@ -87,6 +90,7 @@ final class ChildClass extends ParentClass
     #[\Override]
     public function foo()
     {
+        echo 'override default';
     }
 }
 CODE_SAMPLE
@@ -120,8 +124,8 @@ CODE_SAMPLE
         }
 
         $classReflection = $this->reflectionProvider->getClass($className);
+        $parentClassReflections = $classReflection->getParents();
 
-        $parentClassReflections = array_merge($classReflection->getParents(), $classReflection->getTraits());
         if ($parentClassReflections === []) {
             return null;
         }
@@ -155,6 +159,7 @@ CODE_SAMPLE
         $classMethodName = $this->getName($classMethod->name);
 
         // Private methods should be ignored
+        $shouldAddOverride = false;
         foreach ($parentClassReflections as $parentClassReflection) {
             if (! $parentClassReflection->hasNativeMethod($classMethod->name->toString())) {
                 continue;
@@ -167,16 +172,20 @@ CODE_SAMPLE
 
             $parentMethod = $parentClassReflection->getNativeMethod($classMethodName);
             if ($parentMethod->isPrivate()) {
-                continue;
+                break;
             }
 
             if ($this->shouldSkipParentClassMethod($parentClassReflection, $classMethod)) {
                 continue;
             }
 
+            $shouldAddOverride = true;
+            break;
+        }
+
+        if ($shouldAddOverride) {
             $classMethod->attrGroups[] = new AttributeGroup([new Attribute(new FullyQualified(self::OVERRIDE_CLASS))]);
             $this->hasChanged = true;
-            return;
         }
     }
 
@@ -207,6 +216,8 @@ CODE_SAMPLE
             return true;
         }
 
+        // just override abstract method also skipped on purpose
+        // only grand child of abstract method that parent has content will have
         if ($parentClassMethod->isAbstract()) {
             return true;
         }

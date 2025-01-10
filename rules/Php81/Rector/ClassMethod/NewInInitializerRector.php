@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rector\Php81\Rector\ClassMethod;
 
 use PhpParser\Node;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp\Coalesce;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Param;
@@ -99,12 +100,6 @@ CODE_SAMPLE
         }
 
         $hasChanged = false;
-
-        // stmts variable defined to avoid unset overlap when used via array_slice() on
-        // StmtsManipulator::isVariableUsedInNextStmt()
-        // @see https://github.com/rectorphp/rector-src/pull/5968
-        // @see https://3v4l.org/eojhk
-        $stmts = (array) $constructClassMethod->stmts;
         foreach ((array) $constructClassMethod->stmts as $key => $stmt) {
             foreach ($params as $param) {
                 $paramName = $this->getName($param);
@@ -117,7 +112,7 @@ CODE_SAMPLE
                     continue;
                 }
 
-                if ($this->stmtsManipulator->isVariableUsedInNextStmt($stmts, $key + 1, $paramName)) {
+                if ($this->stmtsManipulator->isVariableUsedInNextStmt($constructClassMethod, $key + 1, $paramName)) {
                     continue;
                 }
 
@@ -203,9 +198,25 @@ CODE_SAMPLE
             return [];
         }
 
-        return array_filter(
+        $params = array_filter(
             $classMethod->params,
             static fn (Param $param): bool => $param->type instanceof NullableType
         );
+
+        if ($params === []) {
+            return $params;
+        }
+
+        $totalParams = count($classMethod->params);
+
+        foreach (array_keys($params) as $key) {
+            for ($iteration = $key + 1; $iteration < $totalParams; ++$iteration) {
+                if (isset($classMethod->params[$iteration]) && ! $classMethod->params[$iteration]->default instanceof Expr) {
+                    return [];
+                }
+            }
+        }
+
+        return $params;
     }
 }

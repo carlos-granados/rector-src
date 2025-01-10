@@ -10,6 +10,7 @@ use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\NullsafeMethodCall;
 use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Name;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
@@ -30,8 +31,8 @@ use PHPStan\Reflection\ReflectionProvider;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\NodeScopeAndMetadataDecorator;
 use Rector\NodeTypeResolver\NodeTypeResolver;
-use Rector\PhpDocParser\PhpParser\SmartPhpParser;
 use Rector\PhpParser\Node\BetterNodeFinder;
+use Rector\PhpParser\Parser\RectorParser;
 use Rector\Reflection\MethodReflectionResolver;
 use Rector\StaticTypeMapper\Resolver\ClassNameFromObjectTypeResolver;
 use Rector\ValueObject\MethodName;
@@ -52,7 +53,7 @@ final class AstResolver
     private array $parsedFileNodes = [];
 
     public function __construct(
-        private readonly SmartPhpParser $smartPhpParser,
+        private readonly RectorParser $rectorParser,
         private readonly NodeScopeAndMetadataDecorator $nodeScopeAndMetadataDecorator,
         private readonly NodeNameResolver $nodeNameResolver,
         private readonly ReflectionProvider $reflectionProvider,
@@ -305,7 +306,7 @@ final class AstResolver
         }
 
         try {
-            $stmts = $this->smartPhpParser->parseFile($fileName);
+            $stmts = $this->rectorParser->parseFile($fileName);
         } catch (Throwable $throwable) {
             /**
              * phpstan.phar contains jetbrains/phpstorm-stubs which the code is not downgraded
@@ -375,7 +376,7 @@ final class AstResolver
                 }
 
                 foreach ($constructClassMethod->getParams() as $param) {
-                    if ($param->flags === 0) {
+                    if (! $param->isPromoted()) {
                         continue;
                     }
 
@@ -398,11 +399,12 @@ final class AstResolver
             return null;
         }
 
-        if (! $this->reflectionProvider->hasFunction($funcCall->name, $scope)) {
+        $functionName = new Name((string) $this->nodeNameResolver->getName($funcCall));
+        if (! $this->reflectionProvider->hasFunction($functionName, $scope)) {
             return null;
         }
 
-        $functionReflection = $this->reflectionProvider->getFunction($funcCall->name, $scope);
+        $functionReflection = $this->reflectionProvider->getFunction($functionName, $scope);
         return $this->resolveFunctionFromFunctionReflection($functionReflection);
     }
 }

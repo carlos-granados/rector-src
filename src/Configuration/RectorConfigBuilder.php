@@ -160,9 +160,6 @@ final class RectorConfigBuilder
 
     private ?string $editorUrl = null;
 
-    /**
-     * @api soon to be used
-     */
     private ?bool $isWithPhpSetsUsed = null;
 
     private ?bool $isWithPhpLevelUsed = null;
@@ -174,6 +171,11 @@ final class RectorConfigBuilder
             $this->groupLoadedSets = $setManager->matchBySetGroups($this->setGroups);
 
             SimpleParameterProvider::addParameter(Option::COMPOSER_BASED_SETS, $this->groupLoadedSets);
+        }
+
+        // not to miss it by accident
+        if ($this->isWithPhpSetsUsed === true) {
+            $this->sets[] = SetList::PHP_POLYFILLS;
         }
 
         // merge sets together
@@ -360,8 +362,8 @@ final class RectorConfigBuilder
     }
 
     /**
-     * Include PHP files from the root directory,
-     * typically ecs.php, rector.php etc.
+     * Include PHP files from the root directory (including hidden ones),
+     * typically ecs.php, rector.php, .php-cs-fixer.dist.php etc.
      */
     public function withRootFiles(): self
     {
@@ -410,7 +412,13 @@ final class RectorConfigBuilder
         $rootPhpFilesFinder = (new Finder())->files()
             ->in(getcwd())
             ->depth(0)
-            ->name('*.php');
+            ->ignoreDotFiles(false)
+            ->name('*.php')
+            ->name('.*.php')
+            // this file cannot be interpreted as PHP file
+            // https://www.jetbrains.com/help/phpstorm/ide-advanced-metadata.html#expected-arguments
+            ->notName('.phpstorm.meta.php')
+        ;
 
         foreach ($rootPhpFilesFinder as $rootPhpFileFinder) {
             $path = $rootPhpFileFinder->getRealPath();
@@ -447,6 +455,7 @@ final class RectorConfigBuilder
         bool $fosRest = false,
         bool $jms = false,
         bool $sensiolabs = false,
+        bool $behat = false,
         bool $all = false
     ): self {
         // if nothing is passed, enable all as convention in other method
@@ -486,10 +495,15 @@ final class RectorConfigBuilder
             $this->sets[] = SensiolabsSetList::ANNOTATIONS_TO_ATTRIBUTES;
         }
 
+        if ($behat || $all) {
+            $this->sets[] = SetList::BEHAT_ANNOTATIONS_TO_ATTRIBUTES;
+        }
+
         return $this;
     }
 
     /**
+     * @deprecated Already included in withPhpSets(), no need to repeat
      * make use of polyfill packages in composer.json
      */
     public function withPhpPolyfill(): self
@@ -518,8 +532,15 @@ final class RectorConfigBuilder
         bool $php53 = false,
         bool $php84 = false, // place on later as BC break when used in php 7.x without named arg
     ): self {
+        if ($this->isWithPhpSetsUsed === true) {
+            throw new InvalidConfigurationException(sprintf(
+                'Method "%s()" can be called only once. It always includes all previous sets UP TO the defined version.%sThe best practise is to call it once with no argument. That way it will pick up PHP version from composer.json and your project will always stay up to date.',
+                __METHOD__,
+                PHP_EOL
+            ));
+        }
+
         $this->isWithPhpSetsUsed = true;
-        $this->withPhpPolyfill();
 
         $pickedArguments = array_filter(func_get_args());
         if ($pickedArguments !== []) {

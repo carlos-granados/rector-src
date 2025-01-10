@@ -10,7 +10,6 @@ use PhpParser\Node\Stmt\Function_;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\Type;
 use Rector\TypeDeclaration\TypeInferer\ReturnTypeInferer\ReturnedNodesReturnTypeInfererTypeInferer;
-use Rector\TypeDeclaration\TypeNormalizer;
 
 /**
  * @internal
@@ -18,7 +17,6 @@ use Rector\TypeDeclaration\TypeNormalizer;
 final readonly class ReturnTypeInferer
 {
     public function __construct(
-        private TypeNormalizer $typeNormalizer,
         private ReturnedNodesReturnTypeInfererTypeInferer $returnedNodesReturnTypeInfererTypeInferer
     ) {
     }
@@ -30,6 +28,6 @@ final readonly class ReturnTypeInferer
             return new MixedType();
         }
 
-        return $this->typeNormalizer->normalizeArrayTypeAndArrayNever($originalType);
+        return $originalType;
     }
 }

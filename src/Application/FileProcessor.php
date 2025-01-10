@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Rector\Application;
 
 use Nette\Utils\FileSystem;
-use Nette\Utils\Strings;
 use PhpParser\Node;
 use PHPStan\AnalysedCodeException;
 use PHPStan\Dependency\DependencyResolver;
@@ -29,18 +28,11 @@ use Rector\ValueObject\Application\File;
 use Rector\ValueObject\Configuration;
 use Rector\ValueObject\Error\SystemError;
 use Rector\ValueObject\FileProcessResult;
-use Rector\ValueObject\Reporting\FileDiff;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Throwable;
 
 final readonly class FileProcessor
 {
-    /**
-     * @var string
-     * @see https://regex101.com/r/llm7XZ/1
-     */
-    private const OPEN_TAG_SPACED_REGEX = '#^[ \t]+<\?php#m';
-
     public function __construct(
         private BetterStandardPrinter $betterStandardPrinter,
         private RectorNodeTraverser $rectorNodeTraverser,
@@ -75,46 +67,46 @@ final readonly class FileProcessor
         $fileHasChanged = false;
         $filePath = $file->getFilePath();
 
-        // 2. change nodes with Rectors
-        $rectorWithLineChanges = null;
-
         do {
             $file->changeHasChanged(false);
 
+            // 1. change nodes with Rector Rules
             $newStmts = $this->rectorNodeTraverser->traverse($file->getNewStmts());
 
-            // apply post rectors
+            // 2. apply post rectors
             $postNewStmts = $this->postFileProcessor->traverse($newStmts, $file);
 
-            // this is needed for new tokens added in "afterTraverse()"
+            // 3. this is needed for new tokens added in "afterTraverse()"
             $file->changeNewStmts($postNewStmts);
 
-            // 3. print to file or string
+            // 4. print to file or string
             // important to detect if file has changed
             $this->printFile($file, $configuration, $filePath);
 
-            $fileHasChangedInCurrentPass = $file->hasChanged();
-
-            if ($fileHasChangedInCurrentPass) {
-                $file->setFileDiff($this->fileDiffFactory->createTempFileDiff($file));
-                $rectorWithLineChanges = $file->getRectorWithLineChanges();
-
-                $fileHasChanged = true;
+            // no change in current iteration, stop
+            if (! $file->hasChanged()) {
+                break;
             }
-        } while ($fileHasChangedInCurrentPass);
+
+            $fileHasChanged = true;
+        } while (true);
 
         // 5. add as cacheable if not changed at all
         if (! $fileHasChanged) {
             $this->changedFilesDetector->addCachableFile($filePath);
-        }
+        } else {
+            // when changed, set final status changed to true
+            // to ensure it make sense to verify in next process when needed
+            $file->changeHasChanged(true);
 
-        if ($configuration->shouldShowDiffs() && $rectorWithLineChanges !== null) {
             $currentFileDiff = $this->fileDiffFactory->createFileDiffWithLineChanges(
+                $configuration->shouldShowDiffs(),
                 $file,
                 $file->getOriginalFileContent(),
                 $file->getFileContent(),
-                $rectorWithLineChanges
+                $file->getRectorWithLineChanges()
             );
+
             $file->setFileDiff($currentFileDiff);
         }
 
@@ -189,33 +181,6 @@ final readonly class FileProcessor
             $file->getOldStmts(),
             $file->getOldTokens()
         );
-
-        /**
-         * When no diff applied, the PostRector may still change the content, that's why printing still needed
-         * On printing, the space may be wiped, these below check compare with original file content used to verify
-         * that no change actually needed
-         */
-        if (! $file->getFileDiff() instanceof FileDiff) {
-            /**
-             * Handle new line or space before <?php or InlineHTML node wiped on print format preserving
-             * On very first content level
-             */
-            $originalFileContent = $file->getOriginalFileContent();
-            if ($originalFileContent === $newContent) {
-                return;
-            }
-
-            // handle space before <?php
-            $strippedNewContent = Strings::replace($newContent, self::OPEN_TAG_SPACED_REGEX, '<?php');
-            $strippedOriginalFileContent = Strings::replace(
-                $originalFileContent,
-                self::OPEN_TAG_SPACED_REGEX,
-                '<?php'
-            );
-            if ($strippedOriginalFileContent === $strippedNewContent) {
-                return;
-            }
-        }
 
         // change file content early to make $file->hasChanged() based on new content
         $file->changeFileContent($newContent);

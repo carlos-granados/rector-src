@@ -20,6 +20,7 @@ use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
 use Rector\NodeAnalyzer\PropertyFetchAnalyzer;
 use Rector\NodeNameResolver\NodeNameResolver;
+use Rector\NodeNestingScope\ContextAnalyzer;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\NodeTypeResolver;
 use Rector\Php80\NodeAnalyzer\PhpAttributeAnalyzer;
@@ -39,7 +40,9 @@ final readonly class PropertyManipulator
     /**
      * @var string[]|class-string<Table>[]
      */
-    private const DOCTRINE_PROPERTY_ANNOTATIONS = [
+    private const ALLOWED_NOT_READONLY_CLASS_ANNOTATIONS = [
+        'ApiPlatform\Core\Annotation\ApiResource',
+        'ApiPlatform\Metadata\ApiResource',
         'Doctrine\ORM\Mapping\Entity',
         'Doctrine\ORM\Mapping\Table',
         'Doctrine\ORM\Mapping\MappedSuperclass',
@@ -57,7 +60,8 @@ final readonly class PropertyManipulator
         private PromotedPropertyResolver $promotedPropertyResolver,
         private ConstructorAssignDetector $constructorAssignDetector,
         private AstResolver $astResolver,
-        private PropertyFetchAnalyzer $propertyFetchAnalyzer
+        private PropertyFetchAnalyzer $propertyFetchAnalyzer,
+        private ContextAnalyzer $contextAnalyzer
     ) {
     }
 
@@ -76,7 +80,7 @@ final readonly class PropertyManipulator
         $classMethod = $class->getMethod(MethodName::CONSTRUCT);
 
         foreach ($propertyFetches as $propertyFetch) {
-            if ($this->isChangeableContext($propertyFetch)) {
+            if ($this->contextAnalyzer->isChangeableContext($propertyFetch)) {
                 return true;
             }
 
@@ -142,6 +146,28 @@ final readonly class PropertyManipulator
         return false;
     }
 
+    public function hasTraitWithSamePropertyOrWritten(ClassReflection $classReflection, string $propertyName): bool
+    {
+        foreach ($classReflection->getTraits() as $traitUse) {
+            if ($traitUse->hasProperty($propertyName)) {
+                return true;
+            }
+
+            $trait = $this->astResolver->resolveClassFromClassReflection($traitUse);
+            if (! $trait instanceof Trait_) {
+                continue;
+            }
+
+            // is property written to
+            if ($this->propertyFetchAnalyzer->containsWrittenPropertyFetchName($trait, $propertyName)) {
+                return true;
+            }
+
+        }
+
+        return false;
+    }
+
     private function isPropertyAssignedOnlyInConstructor(
         Class_ $class,
         string $propertyName,
@@ -165,29 +191,12 @@ final readonly class PropertyManipulator
         return $this->constructorAssignDetector->isPropertyAssigned($class, $propertyName);
     }
 
-    private function isChangeableContext(PropertyFetch | StaticPropertyFetch $propertyFetch): bool
-    {
-        if ($propertyFetch->getAttribute(AttributeKey::IS_UNSET_VAR, false)) {
-            return true;
-        }
-
-        if ($propertyFetch->getAttribute(AttributeKey::INSIDE_ARRAY_DIM_FETCH, false)) {
-            return true;
-        }
-
-        if ($propertyFetch->getAttribute(AttributeKey::IS_USED_AS_ARG_BY_REF_VALUE, false) === true) {
-            return true;
-        }
-
-        return $propertyFetch->getAttribute(AttributeKey::IS_INCREMENT_OR_DECREMENT, false) === true;
-    }
-
     private function hasAllowedNotReadonlyAnnotationOrAttribute(PhpDocInfo $phpDocInfo, Class_ $class): bool
     {
-        if ($phpDocInfo->hasByAnnotationClasses(self::DOCTRINE_PROPERTY_ANNOTATIONS)) {
+        if ($phpDocInfo->hasByAnnotationClasses(self::ALLOWED_NOT_READONLY_CLASS_ANNOTATIONS)) {
             return true;
         }
 
-        return $this->phpAttributeAnalyzer->hasPhpAttributes($class, self::DOCTRINE_PROPERTY_ANNOTATIONS);
+        return $this->phpAttributeAnalyzer->hasPhpAttributes($class, self::ALLOWED_NOT_READONLY_CLASS_ANNOTATIONS);
     }
 }

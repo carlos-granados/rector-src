@@ -46,7 +46,7 @@ CODE_SAMPLE
 
                 ,
                 <<<'CODE_SAMPLE'
-$name = SomeEnum::VALUE;
+$name = SomeEnum::VALUE->name;
 CODE_SAMPLE
             ),
         ]);
@@ -110,10 +110,10 @@ CODE_SAMPLE
         return $classReflection->hasConstant($constant);
     }
 
-    private function refactorGetKeyMethodCall(MethodCall $methodCall): ?ClassConstFetch
+    private function refactorGetKeyMethodCall(MethodCall $methodCall): ?PropertyFetch
     {
         if (! $methodCall->var instanceof StaticCall) {
-            return null;
+            return $this->nodeFactory->createPropertyFetch($methodCall->var, 'name');
         }
 
         $staticCall = $methodCall->var;
@@ -131,13 +131,15 @@ CODE_SAMPLE
             return null;
         }
 
-        return $this->nodeFactory->createClassConstFetch($className, $enumCaseName);
+        $classConstFetch = $this->nodeFactory->createClassConstFetch($className, $enumCaseName);
+
+        return new PropertyFetch($classConstFetch, 'name');
     }
 
     private function refactorGetValueMethodCall(MethodCall $methodCall): ?PropertyFetch
     {
         if (! $methodCall->var instanceof StaticCall) {
-            return null;
+            return $this->nodeFactory->createPropertyFetch($methodCall->var, 'value');
         }
 
         $staticCall = $methodCall->var;
@@ -266,10 +268,8 @@ CODE_SAMPLE
         return $this->nodeFactory->createClassConstFetch($className, $enumCaseName);
     }
 
-    private function refactorMethodCall(
-        MethodCall $methodCall,
-        string $methodName
-    ): null|ClassConstFetch|PropertyFetch|Identical {
+    private function refactorMethodCall(MethodCall $methodCall, string $methodName): null|PropertyFetch|Identical
+    {
         if (! $this->isObjectType($methodCall->var, new ObjectType('MyCLabs\Enum\Enum'))) {
             return null;
         }

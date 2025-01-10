@@ -41,8 +41,14 @@ final readonly class ObjectTypeSpecifier
     public function narrowToFullyQualifiedOrAliasedObjectType(
         Node $node,
         ObjectType $objectType,
-        Scope|null $scope
+        Scope|null $scope,
+        bool $withPreslash = false
     ): TypeWithClassName | NonExistingObjectType | UnionType | MixedType | TemplateType {
+        $className = ltrim($objectType->getClassName(), '\\');
+        if (str_starts_with($objectType->getClassName(), '\\')) {
+            return new FullyQualifiedObjectType($className);
+        }
+
         $uses = $this->useImportsResolver->resolve();
 
         $aliasedObjectType = $this->matchAliasedObjectType($objectType, $uses);
@@ -55,16 +61,12 @@ final readonly class ObjectTypeSpecifier
             return $shortenedObjectType;
         }
 
-        $className = ltrim($objectType->getClassName(), '\\');
-        if (str_starts_with($objectType->getClassName(), '\\')) {
-            return new FullyQualifiedObjectType($className);
-        }
-
         if ($this->reflectionProvider->hasClass($className)) {
             return new FullyQualifiedObjectType($className);
         }
 
         // probably in same namespace
+        $namespaceName = null;
         if ($scope instanceof Scope) {
             $namespaceName = $scope->getNamespace();
             if ($namespaceName !== null) {
@@ -73,9 +75,7 @@ final readonly class ObjectTypeSpecifier
                     return new FullyQualifiedObjectType($newClassName);
                 }
             }
-        }
 
-        if ($scope instanceof Scope) {
             $classReflection = $scope->getClassReflection();
             if ($classReflection instanceof ClassReflection) {
                 $templateTags = $classReflection->getTemplateTags();
@@ -84,14 +84,14 @@ final readonly class ObjectTypeSpecifier
 
                 if (! $templateTypeScope instanceof TemplateTypeScope) {
                     // invalid type
-                    return new NonExistingObjectType($className);
+                    return $this->resolveNamespacedNonExistingObjectType($namespaceName, $className, $withPreslash);
                 }
 
                 $currentTemplateTag = $templateTags[$className] ?? null;
 
                 if ($currentTemplateTag === null) {
                     // invalid type
-                    return new NonExistingObjectType($className);
+                    return $this->resolveNamespacedNonExistingObjectType($namespaceName, $className, $withPreslash);
                 }
 
                 return TemplateTypeFactory::create(
@@ -104,7 +104,27 @@ final readonly class ObjectTypeSpecifier
         }
 
         // invalid type
-        return new NonExistingObjectType($className);
+        return $this->resolveNamespacedNonExistingObjectType($namespaceName, $className, $withPreslash);
+    }
+
+    private function resolveNamespacedNonExistingObjectType(
+        ?string $namespacedName,
+        string $className,
+        bool $withPreslash
+    ): NonExistingObjectType {
+        if ($namespacedName === null) {
+            return new NonExistingObjectType($className);
+        }
+
+        if ($withPreslash) {
+            return new NonExistingObjectType($className);
+        }
+
+        if (str_contains($className, '\\')) {
+            return new NonExistingObjectType($className);
+        }
+
+        return new NonExistingObjectType($namespacedName . '\\' . $className);
     }
 
     /**
@@ -153,16 +173,16 @@ final readonly class ObjectTypeSpecifier
     ): ?AliasedObjectType {
         // A. is alias in use statement matching this class alias
         if ($alias === $className) {
-            return new AliasedObjectType($alias, $fullyQualifiedName);
+            return new AliasedObjectType($className, $fullyQualifiedName);
         }
 
         // B. is aliased classes matching the class name
         if ($useName === $className) {
-            return new AliasedObjectType($alias, $fullyQualifiedName);
+            return new AliasedObjectType($className, $fullyQualifiedName);
         }
 
         if (str_starts_with($className, $alias . '\\')) {
-            return new AliasedObjectType($alias, $fullyQualifiedName . ltrim($className, $alias));
+            return new AliasedObjectType($className, $fullyQualifiedName . ltrim($className, $alias));
         }
 
         return null;

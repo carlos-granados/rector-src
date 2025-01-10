@@ -41,7 +41,6 @@ final class BootstrapFilesIncluder
 
     private function requireRectorStubs(): void
     {
-        /** @var false|string $stubsRectorDirectory */
         $stubsRectorDirectory = realpath(__DIR__ . '/../../stubs-rector');
         if ($stubsRectorDirectory === false) {
             return;
@@ -49,10 +48,10 @@ final class BootstrapFilesIncluder
 
         $dir = new RecursiveDirectoryIterator($stubsRectorDirectory, RecursiveDirectoryIterator::SKIP_DOTS);
 
-        /** @var SplFileInfo[] $stubs */
         $stubs = new RecursiveIteratorIterator($dir);
 
         foreach ($stubs as $stub) {
+            /** @var SplFileInfo $stub */
             require_once $stub->getRealPath();
         }
     }

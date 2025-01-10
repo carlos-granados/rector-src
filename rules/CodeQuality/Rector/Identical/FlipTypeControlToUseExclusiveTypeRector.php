@@ -6,14 +6,17 @@ namespace Rector\CodeQuality\Rector\Identical;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\BinaryOp\Identical;
 use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\BooleanNot;
 use PhpParser\Node\Expr\Instanceof_;
 use PhpParser\Node\Name\FullyQualified;
 use PHPStan\Type\ObjectType;
+use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\PhpParser\Node\Value\ValueResolver;
 use Rector\Rector\AbstractRector;
+use Rector\StaticTypeMapper\ValueObject\Type\AliasedObjectType;
 use Rector\StaticTypeMapper\ValueObject\Type\ShortenedObjectType;
 use Rector\TypeDeclaration\TypeAnalyzer\NullableTypeAnalyzer;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -86,7 +89,13 @@ CODE_SAMPLE
         Expr $expr,
         Identical|NotIdentical $binaryOp
     ): BooleanNot|Instanceof_ {
-        $fullyQualifiedType = $objectType instanceof ShortenedObjectType ? $objectType->getFullyQualifiedName() : $objectType->getClassName();
+        $fullyQualifiedType = $objectType instanceof ShortenedObjectType || $objectType instanceof AliasedObjectType
+            ? $objectType->getFullyQualifiedName()
+            : $objectType->getClassName();
+
+        if ($expr instanceof Assign) {
+            $expr->setAttribute(AttributeKey::WRAPPED_IN_PARENTHESES, true);
+        }
 
         $instanceof = new Instanceof_($expr, new FullyQualified($fullyQualifiedType));
         if ($binaryOp instanceof NotIdentical) {

@@ -17,7 +17,9 @@ use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Use_;
 use PHPStan\PhpDocParser\Ast\Node as DocNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\GenericTagValueNode;
+use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocChildNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode;
+use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTextNode;
 use PHPStan\Reflection\ReflectionProvider;
 use Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
@@ -31,6 +33,7 @@ use Rector\Php80\NodeAnalyzer\PhpAttributeAnalyzer;
 use Rector\Php80\NodeFactory\AttrGroupsFactory;
 use Rector\Php80\NodeManipulator\AttributeGroupNamedArgumentManipulator;
 use Rector\Php80\ValueObject\AnnotationToAttribute;
+use Rector\Php80\ValueObject\AttributeValueAndDocComment;
 use Rector\Php80\ValueObject\DoctrineTagAndAnnotationToAttribute;
 use Rector\PhpAttribute\NodeFactory\PhpAttributeGroupFactory;
 use Rector\PhpDocParser\PhpDocParser\PhpDocNodeTraverser;
@@ -44,6 +47,7 @@ use Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Php80\Rector\Class_\AnnotationToAttributeRector\AnnotationToAttributeRectorTest
  * @see \Rector\Tests\Php80\Rector\Class_\AnnotationToAttributeRector\Php81NestedAttributesRectorTest
+ * @see \Rector\Tests\Php80\Rector\Class_\AnnotationToAttributeRector\MultipleCallAnnotationToAttributeRectorTest
  */
 final class AnnotationToAttributeRector extends AbstractRector implements ConfigurableRectorInterface, MinPhpVersionInterface
 {
@@ -61,7 +65,8 @@ final class AnnotationToAttributeRector extends AbstractRector implements Config
         private readonly PhpAttributeAnalyzer $phpAttributeAnalyzer,
         private readonly DocBlockUpdater $docBlockUpdater,
         private readonly PhpDocInfoFactory $phpDocInfoFactory,
-        private readonly ReflectionProvider $reflectionProvider
+        private readonly ReflectionProvider $reflectionProvider,
+        private readonly AttributeValueResolver $attributeValueResolver
     ) {
     }
 
@@ -177,12 +182,13 @@ CODE_SAMPLE
         $phpDocNodeTraverser = new PhpDocNodeTraverser();
         $phpDocNodeTraverser->traverseWithCallable($phpDocInfo->getPhpDocNode(), '', function (DocNode $docNode) use (
             &$attributeGroups,
-        ): ?int {
+        ): int|PhpDocChildNode|null {
+
             if (! $docNode instanceof PhpDocTagNode) {
                 return null;
             }
 
-            if (! $docNode->value instanceof GenericTagValueNode) {
+            if (! $docNode->value instanceof GenericTagValueNode && ! $docNode->value instanceof DoctrineAnnotationTagValueNode) {
                 return null;
             }
 
@@ -195,7 +201,7 @@ CODE_SAMPLE
 
             foreach ($this->annotationsToAttributes as $annotationToAttribute) {
                 $desiredTag = $annotationToAttribute->getTag();
-                if ($desiredTag !== $tag) {
+                if (strtolower($desiredTag) !== strtolower($tag)) {
                     continue;
                 }
 
@@ -204,8 +210,20 @@ CODE_SAMPLE
                     continue;
                 }
 
-                $attributeGroups[] = $this->phpAttributeGroupFactory->createFromSimpleTag($annotationToAttribute);
+                $attributeValueAndDocComment = $this->attributeValueResolver->resolve($annotationToAttribute, $docNode);
+
+                $attributeGroups[] = $this->phpAttributeGroupFactory->createFromSimpleTag(
+                    $annotationToAttribute,
+                    $attributeValueAndDocComment instanceof AttributeValueAndDocComment ? $attributeValueAndDocComment->attributeValue : null,
+                );
+
+                // keep partial original comment, if useful
+                if ($attributeValueAndDocComment instanceof AttributeValueAndDocComment && $attributeValueAndDocComment->docComment) {
+                    return new PhpDocTextNode($attributeValueAndDocComment->docComment);
+                }
+
                 return PhpDocNodeTraverser::NODE_REMOVE;
+
             }
 
             return null;

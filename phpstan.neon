@@ -1,12 +1,12 @@
-# to be enabled later once rector upgraded to use phpstan v2
-#includes:
-#    - vendor/symplify/phpstan-rules/config/symplify-rules.neon
-#    - vendor/symplify/phpstan-rules/config/rector-rules.neon
+includes:
+    - vendor/symplify/phpstan-rules/config/symplify-rules.neon
+    - vendor/symplify/phpstan-rules/config/rector-rules.neon
 
 parameters:
     level: 8
 
     reportUnmatchedIgnoredErrors: false
+    errorFormat: symplify
 
     # requires exact closure types
     checkMissingCallableSignature: true
@@ -37,28 +37,24 @@ parameters:
         - '*tests/*/Source*'
 
     # https://github.com/rectorphp/type-perfect/
-# to be enabled later once rector upgraded to use phpstan v2
-#    type_perfect:
-#        no_mixed: true
-#        null_over_false: true
-#        narrow_param: true
-#        narrow_return: true
+    type_perfect:
+        no_mixed: true
+        null_over_false: true
+        narrow_param: true
+        narrow_return: true
 
     ignoreErrors:
         -
             identifier: missingType.generics
 
         # phpstan class instance
-        -
-            identifier: phpstanApi.class
+        - identifier: phpstanApi.class
 
         # phpstan class constant value
-        -
-            identifier: phpstanApi.classConstant
+        - identifier: phpstanApi.classConstant
 
         # phpstan instanceof
-        -
-            identifier: phpstanApi.instanceofAssumption
+        - identifier: phpstanApi.instanceofAssumption
 
         # assert phpunit
         -
@@ -70,17 +66,8 @@ parameters:
             identifier: greaterOrEqual.alwaysTrue
             path: src/Util/FileHasher.php
 
-        # unreliable on loop
-        -
-            identifier: instanceof.alwaysTrue
-            path: rules/CodingStyle/Rector/Assign/SplitDoubleAssignRector.php
-
         -
             identifier: phpstanApi.constructor
-
-        # enforce native type
-        -
-            identifier: varTag.nativeType
 
         # on runtime check
         -
@@ -89,15 +76,8 @@ parameters:
                 - src/Console/Notifier.php
                 - src/Util/FileHasher.php
 
-        -
-            identifier: argument.type
-
-        -
-            identifier: phpstanApi.varTagAssumption
-
-        -
-            identifier: assign.propertyType
-            path: src/PhpParser/NodeTraverser/RectorNodeTraverser.php
+#        -
+#            identifier: argument.type
 
         # is nested expr
         -
@@ -115,8 +95,6 @@ parameters:
         -
             message: '#Method (.*?) should return (.*?)\|null but returns PhpParser\\Node\|null#'
             path: src/PhpParser/Node/BetterNodeFinder.php
-
-        - '#Method (.*?) should return array<T of PhpParser\\Node\> but returns array<PhpParser\\Node\>#'
 
         -
             message: '#Function "property_exists\(\)" cannot be used/left in the code#'
@@ -136,9 +114,6 @@ parameters:
                 - src/BetterPhpDocParser/PhpDocManipulator/PhpDocClassRenamer.php
                 - src/NodeTypeResolver/PHPStan/Type/TypeFactory.php
 
-        # array_index on generic types
-        - '#Method Rector\\NodeTypeResolver\\PHPStan\\Type\\TypeFactory\:\:uniquateTypes\(\) should return array<TType of PHPStan\\Type\\Type\> but returns array<int, PHPStan\\Type\\Type\>#'
-
         - '#Method Rector\\Arguments\\ArgumentDefaultValueReplacer\:\:processReplaces\(\) should return \(TCall of PhpParser\\Node\\Expr\\FuncCall\|PhpParser\\Node\\Expr\\MethodCall\|PhpParser\\Node\\Expr\\New_\|PhpParser\\Node\\Expr\\StaticCall\|PhpParser\\Node\\Stmt\\ClassMethod\)\|null but returns PhpParser\\Node\\Stmt\\ClassMethod\|null#'
 
         # native filesystem calls, required for performance reasons
@@ -147,11 +122,6 @@ parameters:
             paths:
                 - src/Caching/ValueObject/Storage/FileCacheStorage.php
 
-        -
-            message: '#Parameter \#2 \$length of function str_split expects int<1, max\>, int given#'
-            paths:
-                - rules/Php74/Rector/LNumber/AddLiteralSeparatorToNumberRector.php
-
         # many internal cases
         - '#Calling (.*?) is not covered by backward compatibility promise\. The method might change in a minor PHPStan version#'
 
@@ -159,20 +129,6 @@ parameters:
         -
             message: '#Cannot call method (.*?)\(\) on (.*?)\\ProcessPool\|null#'
             path: src/Parallel/Application/ParallelFileProcessor.php
-
-        -
-            message: '#Use value object over return of values#'
-            paths:
-                - src/BetterPhpDocParser/PhpDocParser/StaticDoctrineAnnotationParser/ArrayParser.php
-                - rules/EarlyReturn/Rector/If_/ChangeNestedIfsToEarlyReturnRector.php
-                - rules/Php70/EregToPcreTransformer.php
-                - src/FileSystem/FilesFinder.php
-
-        # mapper re-use
-        - '#Parameter \#1 \$type of method Rector\\PHPStanStaticTypeMapper\\TypeMapper\\ObjectWithoutClassTypeMapper\:\:mapToPhpParserNode\(\) expects PHPStan\\Type\\ObjectWithoutClassType, PHPStan\\Type\\Accessory\\Has(Property|Method)Type given#'
-
-        # Scope vs MutatingScope interchangable false positive
-        - '#Parameter \#3 \$nodeCallback of method PHPStan\\Analyser\\NodeScopeResolver\:\:processNodes\(\) expects callable\(PhpParser\\Node, PHPStan\\Analyser\\Scope\)\: void, (callable|Closure)\(PhpParser\\Node, PHPStan\\Analyser\\MutatingScope\)\: void given#'
 
         # internal reflection
         - '#Instead of "new ClassReflection\(\)" use ReflectionProvider service or "\(new PHPStan\\Reflection\\ClassReflection\(<desired_type>\)\)" for static reflection to work#'
@@ -200,10 +156,6 @@ parameters:
             message:  '#@\\ini_set\(.*\)" is forbidden to use#'
             path: bin/rector.php
 
-        -
-            message: '#Creating new PHPStan\\Parser\\(CachedParser|SimpleParser) is not covered by backward compatibility promise\. The class might change in a minor PHPStan version#'
-            path: src/PhpDocParser/PhpParser/SmartPhpParserFactory.php
-
         # known existing class
         -
             message: '#Instead of "instanceof/is_a\(\)" use ReflectionProvider service or "\(new ObjectType\(<desired_type>\)\)\->isSuperTypeOf\(<element_type>\)" for static reflection to work#'
@@ -225,23 +177,9 @@ parameters:
         - '#Class "Rector\\Tests\\Issues\\ScopeNotAvailable\\Variable\\ArrayItemForeachValueRector" is missing @see annotation with test case class reference#'
 
         -
-            message: '#Parameter \#1 \$phpVersion of method Rector\\Config\\RectorConfig\:\:phpVersion\(\) expects 50200\|50300\|50400\|50500\|50600\|70000\|70100\|70200\|70300\|70400\|80000\|80100\|80200\|80300\|80400\|100000, (.*?) given#'
-            path: rules-tests
-
-        -
             message: '#Class (.*?) not found#'
             paths:
                 - rules-tests/*/config/*
-
-        # trusted items
-        - '#Parameter \#1 \$nodes of method PhpParser\\PrettyPrinterAbstract\:\:pCommaSeparatedMultiline\(\) expects array<PhpParser\\Node>, array<PhpParser\\Node\\Expr\\ArrayItem\|null> given#'
-
-
-        # class string
-        - '#Parameter \#1 \$name of method PHPStan\\BetterReflection\\Reflection\\Adapter\\ReflectionClass\:\:getAttributes\(\) expects class\-string\|null, string given#'
-
-        # useless
-        - '#Parameter \#1 \$suffix of method PHPUnit\\Framework\\Assert\:\:assertStringEndsWith\(\) expects non\-empty\-string, string given#'
 
         -
             message: '#Function "(function_exists|dump_node)\(\)" cannot be used/left in the code#'
@@ -252,13 +190,6 @@ parameters:
 
         # stmts aware/expression generics
         - '#PhpParser\\Node\\Stmt\\Expression is not generic#'
-
-        - '#Parameter \#3 \$assign of method Rector\\CodeQuality\\Rector\\FunctionLike\\SimplifyUselessVariableRector\:\:processSimplifyUselessVariable\(\) expects PhpParser\\Node\\Expr\\Assign\|PhpParser\\Node\\Expr\\AssignOp, PhpParser\\Node\\Expr given#'
-
-        # false positive
-        -
-            message: '#Offset 0 does not exist on array<PhpParser\\Node\\Stmt>\|null#'
-            path:  rules/Php70/Rector/ClassMethod/Php4ConstructorRector.php
 
         # chicken/egg
         -
@@ -275,11 +206,6 @@ parameters:
             message: '#Function "(class_exists|interface_exists)\(\)" cannot be used/left in the code\: use ReflectionProvider\->has\*\(\) instead#'
             path: src/Skipper/SkipCriteriaResolver/SkippedClassResolver.php
 
-        # ignore until PHPParser returns more precise types
-        -
-            message: '#Parameter \#1 \$useType of callable callable\(0\|1\|2\|3, PhpParser\\Node\\Stmt\\UseUse, string\): void expects 0\|1\|2\|3, int given.#'
-            path: rules/CodingStyle/ClassNameImport/UseImportsTraverser.php
-
         - '#(.*?)\\Contract\\PhpParser\\Node\\StmtsAwareInterface\:\:\$stmts#'
 
         # dev rule
@@ -287,9 +213,6 @@ parameters:
 
         # optional as changes behavior, should be used explicitly outside PHP upgrade
         - '#Register "Rector\\Php73\\Rector\\FuncCall\\JsonThrowOnErrorRector" service to "php73\.php" config set#'
-
-        # known enum from strings
-        - '#Method Rector\\Php\\PolyfillPackagesProvider\:\:filterPolyfillPackages\(\) should return array\<.*\> but returns array<int, non\-falsy\-string>#'
 
         # closure detailed
         - '#Method Rector\\Config\\RectorConfig\:\:singleton\(\) has parameter \$concrete with no signature specified for Closure#'
@@ -300,16 +223,12 @@ parameters:
              paths:
                  - src/CustomRules/SimpleNodeDumper.php
                  - src/PhpDocParser/PhpDocParser/PhpDocNodeTraverser.php
-                 - src/Testing/PHPUnit/AbstractTestCase.php
+                 - src/PhpParser/Printer/BetterStandardPrinter.php
 
         # known node variables
         -
             message: '#Access to an undefined property PhpParser\\Node\\Scalar\:\:\$value#'
             path: src/CustomRules/SimpleNodeDumper.php
-
-        -
-            message: '#Offset \(int\|string\) on non\-empty\-array<PHPStan\\PhpDocParser\\Ast\\PhpDoc\\PhpDocChildNode> in isset\(\) always exists and is not nullable#'
-            path: src/BetterPhpDocParser/PhpDocParser/DoctrineAnnotationDecorator.php
 
         -
             message: '#Avoid static access of constants, as they can change value\. Use interface and contract method instead#'
@@ -318,14 +237,6 @@ parameters:
                 - src/Rector/AbstractRector.php
                 # for cache
                 - src/Testing/PHPUnit/AbstractRectorTestCase.php
-                # specific error report
-                - src/Rector/AbstractScopeAwareRector.php
-
-        -
-            message: '#Interface "(.*?)" has only single implementer\. Consider using the class directly as there is no point in using the interface#'
-            paths:
-                # marker interface
-                - src/Contract/PhpParser/Node/StmtsAwareInterface.php
 
         # generated class in /vendor
         -
@@ -336,9 +247,6 @@ parameters:
         -
             message: '#Parameters should have "PhpParser\\Node\\Stmt\\ClassMethod" types as the only types passed to this method#'
             path: src/Reflection/ClassModifierChecker.php
-
-        # node / stmts
-        - '#Parameter \#3 \$stmts of method Rector\\PostRector\\Application\\PostFileProcessor\:\:shouldSkipPostRector\(\) expects array<PhpParser\\Node\\Stmt>, array<PhpParser\\Node> given#'
 
         # false positive - should be fixed
         -
@@ -358,9 +266,6 @@ parameters:
             message: '#Fetching (deprecated )?class constant (.*?) of (deprecated )?class (Rector\\Set\\ValueObject\\DowngradeLevelSetList|Rector\\Symfony\\Set\\(.*?))#'
             path: src/Configuration/RectorConfigBuilder.php
 
-        # marker interface to be used ad-hoc
-        - '#Interface "Rector\\Configuration\\Deprecation\\Contract\\DeprecatedInterface" has only single implementer#'
-
         # deprecated
         - '#Register "Rector\\Php80\\Rector\\FunctionLike\\MixedTypeRector" service to "php80\.php" config set#'
 
@@ -376,24 +281,43 @@ parameters:
         - '#Method Rector\\.*::providePolyfillPackage\(\) never returns#'
         - '#Method Rector\\.*::filterPolyfillPackages\(\) should return array\<#'
 
-        # realpath() usage
         -
-            message: '#should return string\|null but returns string\|false#'
+            identifier: typePerfect.noMixedMethodCaller
             paths:
-                - src/Bootstrap/RectorConfigsResolver.php
-                - src/ValueObject/Error/SystemError.php
+                - src/PhpParser/Parser/RectorParser.php
 
         -
-            message: '#should return array\<string\> but returns list\<string\|false\>#'
-            path: src/Set/SetManager.php
-
-        -
-            message: '#should return non-empty-string but returns non-empty-string\|false#'
-            paths:
-                - src/Configuration/RectorConfigBuilder.php
-                - src/FileSystem/FilesFinder.php
-
-        # collection of Type
-        -
-            message: '#Method Rector\\NodeTypeResolver\\PHPStan\\Type\\TypeFactory::uniquateTypes\(\) should return array\<TType of PHPStan\\Type\\Type\> but returns list\<PHPStan\\Type\\Type>#'
             path: src/NodeTypeResolver/PHPStan/Type/TypeFactory.php
+            message: '#Method Rector\\NodeTypeResolver\\PHPStan\\Type\\TypeFactory\:\:uniquateTypes\(\) should return array<TType of PHPStan\\Type\\Type> but returns list<PHPStan\\Type\\Type>#'
+
+        # known types
+        -
+            message: '#PHPDoc tag @var with type array<string, int> is not subtype of native type array<int<1, max>>#'
+            path: rules/Naming/PhpArray/ArrayFilter.php
+
+        -
+            message: '#PHPDoc tag @var with type int is not subtype of native type array\|PHPStan\\PhpDocParser\\Ast\\ConstExpr\\ConstExprNode\|Rector\\BetterPhpDocParser\\PhpDoc\\DoctrineAnnotationTagValueNode\|Rector\\BetterPhpDocParser\\PhpDoc\\StringNode\|Rector\\BetterPhpDocParser\\ValueObject\\PhpDoc\\DoctrineAnnotation\\CurlyListNode\|string#'
+            path: src/BetterPhpDocParser/PhpDocParser/StaticDoctrineAnnotationParser.php
+
+        - '#Parameter \#1 \$phpVersion of method Rector\\Config\\RectorConfig\:\:phpVersion\(\) expects 50200\|50300\|50400\|50500\|50600\|70000\|70100\|70200\|70300\|70400\|80000\|80100\|80200\|80300\|80400\|100000, 79999 given#'
+
+        # node vs stmts mix
+        - '#expects array<PhpParser\\Node\\Stmt>, array<PhpParser\\Node> given#'
+        - '#should return non\-empty\-string but returns string#'
+
+        # false positive, can accept non-class string
+        - '#Parameter \#1 \$name of method PHPStan\\BetterReflection\\Reflection\\Adapter\\ReflectionClass\:\:getAttributes\(\) expects class\-string\|null, string given#'
+
+        # false positive, checked above
+        -
+            path: rules/Php71/Rector/List_/ListToArrayDestructRector.php
+            message: '#Parameter \#1 \$items of class PhpParser\\Node\\Expr\\Array_ constructor expects array<PhpParser\\Node\\ArrayItem>, array<PhpParser\\Node\\ArrayItem\|null> given#'
+        -
+            path: rules/CodeQuality/Rector/FunctionLike/SimplifyUselessVariableRector.php
+            message: '#Parameter \#3 \$assign of method Rector\\CodeQuality\\Rector\\FunctionLike\\SimplifyUselessVariableRector\:\:processSimplifyUselessVariable\(\) expects PhpParser\\Node\\Expr\\Assign\|PhpParser\\Node\\Expr\\AssignOp, PhpParser\\Node\\Expr given#'
+
+        # scope vs mutating scope
+        - '#Parameter \#3 \$nodeCallback of method PHPStan\\Analyser\\NodeScopeResolver\:\:processNodes\(\) expects callable\(PhpParser\\Node, PHPStan\\Analyser\\Scope\)\: void, callable\(PhpParser\\Node, PHPStan\\Analyser\\MutatingScope\)\: void given#'
+
+        # list vs array
+        - '#Parameter (.*?) expects list<(.*?)>, array<(.*?)> given#'

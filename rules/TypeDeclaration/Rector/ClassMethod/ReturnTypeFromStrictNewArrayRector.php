@@ -174,7 +174,7 @@ CODE_SAMPLE
         );
     }
 
-    private function changeReturnType(ClassMethod|Function_|Closure $node, ArrayType|ConstantArrayType $arrayType): void
+    private function changeReturnType(ClassMethod|Function_|Closure $node, Type $arrayType): void
     {
         $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($node);
 
@@ -188,7 +188,7 @@ CODE_SAMPLE
             return;
         }
 
-        $itemType = $arrayType->getItemType();
+        $itemType = $arrayType->getIterableValueType();
         if ($itemType instanceof IntersectionType) {
             $narrowArrayType = $arrayType;
         } else {
@@ -263,15 +263,15 @@ CODE_SAMPLE
         return $variables;
     }
 
-    private function shouldAddReturnArrayDocType(ArrayType|ConstantArrayType $arrayType): bool
+    private function shouldAddReturnArrayDocType(Type $arrayType): bool
     {
         if ($arrayType instanceof ConstantArrayType) {
-            if ($arrayType->getItemType() instanceof NeverType) {
+            if ($arrayType->getIterableValueType() instanceof NeverType) {
                 return false;
             }
 
             // handle only simple arrays
-            if (! $arrayType->getKeyType()->isInteger()->yes()) {
+            if (! $arrayType->getIterableKeyType()->isInteger()->yes()) {
                 return false;
             }
         }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rector\Php80\ValueObject;
 
+use PhpParser\Comment;
 use PhpParser\Node\Expr;
 use Rector\Php80\Enum\MatchKind;
 
@@ -12,11 +13,13 @@ final readonly class CondAndExpr
     /**
      * @param Expr[]|null $condExprs
      * @param MatchKind::* $matchKind
+     * @param Comment[] $comments
      */
     public function __construct(
         private array|null $condExprs,
         private Expr $expr,
-        private string $matchKind
+        private string $matchKind,
+        private array $comments = []
     ) {
     }
 
@@ -35,7 +38,11 @@ final readonly class CondAndExpr
             return null;
         }
 
-        return $this->condExprs;
+        if ($this->condExprs === null) {
+            return null;
+        }
+
+        return array_values($this->condExprs);
     }
 
     /**
@@ -52,5 +59,13 @@ final readonly class CondAndExpr
     public function equalsMatchKind(string $matchKind): bool
     {
         return $this->matchKind === $matchKind;
+    }
+
+    /**
+     * @return Comment[]
+     */
+    public function getComments(): array
+    {
+        return $this->comments;
     }
 }

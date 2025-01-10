@@ -5,23 +5,18 @@ declare(strict_types=1);
 namespace Rector\NodeTypeResolver\PhpDocNodeVisitor;
 
 use PhpParser\Node as PhpNode;
-use PhpParser\Node\Identifier;
-use PhpParser\Node\Stmt\GroupUse;
-use PhpParser\Node\Stmt\Use_;
-use PHPStan\Analyser\Scope;
 use PHPStan\PhpDocParser\Ast\Node;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
+use PHPStan\Type\Generic\TemplateObjectType;
 use PHPStan\Type\ObjectType;
-use PHPStan\Type\Type;
 use Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey;
 use Rector\Exception\ShouldNotHappenException;
-use Rector\Naming\Naming\UseImportsResolver;
-use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\ValueObject\OldToNewType;
 use Rector\PhpDocParser\PhpDocParser\PhpDocNodeVisitor\AbstractPhpDocNodeVisitor;
 use Rector\Renaming\Collector\RenamedNameCollector;
 use Rector\StaticTypeMapper\StaticTypeMapper;
+use Rector\StaticTypeMapper\ValueObject\Type\AliasedObjectType;
 use Rector\StaticTypeMapper\ValueObject\Type\ShortenedObjectType;
 
 final class ClassRenamePhpDocNodeVisitor extends AbstractPhpDocNodeVisitor
@@ -37,7 +32,6 @@ final class ClassRenamePhpDocNodeVisitor extends AbstractPhpDocNodeVisitor
 
     public function __construct(
         private readonly StaticTypeMapper $staticTypeMapper,
-        private readonly UseImportsResolver $useImportsResolver,
         private readonly RenamedNameCollector $renamedNameCollector
     ) {
     }
@@ -68,16 +62,22 @@ final class ClassRenamePhpDocNodeVisitor extends AbstractPhpDocNodeVisitor
 
         /** @var \PhpParser\Node $currentPhpNode */
         $currentPhpNode = $this->currentPhpNode;
+        $staticType = $this->staticTypeMapper->mapPHPStanPhpDocTypeNodeToPHPStanType($node, $currentPhpNode);
 
-        $identifier = clone $node;
-        $identifier->name = $this->resolveNamespacedName($identifier, $currentPhpNode, $node->name);
-        $staticType = $this->staticTypeMapper->mapPHPStanPhpDocTypeNodeToPHPStanType($identifier, $currentPhpNode);
+        // non object type and @template is to not be renamed
+        if (! $staticType instanceof ObjectType || $staticType instanceof TemplateObjectType) {
+            return null;
+        }
 
         // make sure to compare FQNs
-        $objectType = $this->expandShortenedObjectType($staticType);
+        $objectType = $this->ensureFQCNObject($staticType, $node->name);
+
         foreach ($this->oldToNewTypes as $oldToNewType) {
-            /** @var ObjectType $oldType */
             $oldType = $oldToNewType->getOldType();
+            if (! $oldType instanceof ObjectType) {
+                continue;
+            }
+
             if (! $objectType->equals($oldType)) {
                 continue;
             }
@@ -112,93 +112,16 @@ final class ClassRenamePhpDocNodeVisitor extends AbstractPhpDocNodeVisitor
         return $this->hasChanged;
     }
 
-    private function resolveNamespacedName(
-        IdentifierTypeNode $identifierTypeNode,
-        PhpNode $phpNode,
-        string $name
-    ): string {
-        if (str_starts_with($name, '\\')) {
-            return $name;
-        }
-
-        if (str_contains($name, '\\')) {
-            return $name;
-        }
-
-        $staticType = $this->staticTypeMapper->mapPHPStanPhpDocTypeNodeToPHPStanType(
-            $identifierTypeNode,
-            $phpNode
-        );
-
-        if (! $staticType instanceof ObjectType) {
-            return $name;
-        }
-
-        if ($staticType instanceof ShortenedObjectType) {
-            return $name;
-        }
-
-        $uses = $this->useImportsResolver->resolve();
-        $originalNode = $phpNode->getAttribute(AttributeKey::ORIGINAL_NODE);
-        $scope = $originalNode instanceof PhpNode
-            ? $originalNode->getAttribute(AttributeKey::SCOPE)
-            : $phpNode->getAttribute(AttributeKey::SCOPE);
-
-        if (! $scope instanceof Scope) {
-            if (! $originalNode instanceof PhpNode) {
-                return $this->resolveNamefromUse($uses, $name);
-            }
-
-            return '';
-        }
-
-        $namespaceName = $scope->getNamespace();
-        if ($namespaceName === null) {
-            return $this->resolveNamefromUse($uses, $name);
-        }
-
-        if ($uses === []) {
-            return $namespaceName . '\\' . $name;
-        }
-
-        $nameFromUse = $this->resolveNamefromUse($uses, $name);
-
-        if ($nameFromUse !== $name) {
-            return $nameFromUse;
-        }
-
-        return $namespaceName . '\\' . $nameFromUse;
-    }
-
-    /**
-     * @param array<Use_|GroupUse> $uses
-     */
-    private function resolveNamefromUse(array $uses, string $name): string
+    private function ensureFQCNObject(ObjectType $objectType, string $identiferName): ObjectType
     {
-        foreach ($uses as $use) {
-            $prefix = $this->useImportsResolver->resolvePrefix($use);
-
-            foreach ($use->uses as $useUse) {
-                if ($useUse->alias instanceof Identifier) {
-                    continue;
-                }
-
-                $lastName = $useUse->name->getLast();
-                if ($lastName === $name) {
-                    return $prefix . $useUse->name->toString();
-                }
-            }
+        if ($objectType instanceof ShortenedObjectType && str_starts_with($identiferName, '\\')) {
+            return new ObjectType(ltrim($identiferName, '\\'));
         }
 
-        return $name;
-    }
-
-    private function expandShortenedObjectType(Type $type): ObjectType|Type
-    {
-        if ($type instanceof ShortenedObjectType) {
-            return new ObjectType($type->getFullyQualifiedName());
+        if ($objectType instanceof ShortenedObjectType || $objectType instanceof AliasedObjectType) {
+            return new ObjectType($objectType->getFullyQualifiedName());
         }
 
-        return $type;
+        return $objectType;
     }
 }

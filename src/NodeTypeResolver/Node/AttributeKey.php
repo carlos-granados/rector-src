@@ -74,11 +74,6 @@ final class AttributeKey
     /**
      * @var string
      */
-    public const IS_UNREACHABLE = 'isUnreachable';
-
-    /**
-     * @var string
-     */
     public const PHP_DOC_INFO = 'php_doc_info';
 
     /**
@@ -90,11 +85,6 @@ final class AttributeKey
      * @var string
      */
     public const DO_NOT_CHANGE = 'do_not_change';
-
-    /**
-     * @var string
-     */
-    public const FUNC_ARGS_TRAILING_COMMA = 'trailing_comma';
 
     /**
      * Helps with infinite loop detection

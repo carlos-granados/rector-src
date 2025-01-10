@@ -33,8 +33,12 @@ final readonly class FilesFinder
      * @param string[] $suffixes
      * @return string[]
      */
-    public function findInDirectoriesAndFiles(array $source, array $suffixes = [], bool $sortByName = true): array
-    {
+    public function findInDirectoriesAndFiles(
+        array $source,
+        array $suffixes = [],
+        bool $sortByName = true,
+        ?string $onlySuffix = null
+    ): array {
         $filesAndDirectories = $this->filesystemTweaker->resolveWithFnmatch($source);
 
         // filtering files in files collection
@@ -45,13 +49,27 @@ final readonly class FilesFinder
             fn (string $filePath): bool => ! $this->pathSkipper->shouldSkip($filePath)
         );
 
-        if ($suffixes !== []) {
-            $fileWithExtensionsFilter = static function (string $filePath) use ($suffixes): bool {
+        // fallback append `.php` to be used for both $filteredFilePaths and $filteredFilePathsInDirectories
+        $hasOnlySuffix = $onlySuffix !== null && $onlySuffix !== '';
+
+        if ($hasOnlySuffix && ! str_ends_with($onlySuffix, '.php')) {
+            $onlySuffix .= '.php';
+        }
+
+        // filter files by specific suffix
+        if ($hasOnlySuffix) {
+            /** @var string $onlySuffix */
+            $fileWithSuffixFilter = (static fn (string $filePath): bool => str_ends_with($filePath, $onlySuffix));
+        } elseif ($suffixes !== []) {
+            $fileWithSuffixFilter = static function (string $filePath) use ($suffixes): bool {
                 $filePathExtension = pathinfo($filePath, PATHINFO_EXTENSION);
                 return in_array($filePathExtension, $suffixes, true);
             };
-            $filteredFilePaths = array_filter($filteredFilePaths, $fileWithExtensionsFilter);
+        } else {
+            $fileWithSuffixFilter = fn (): bool => true;
         }
+
+        $filteredFilePaths = array_filter($filteredFilePaths, $fileWithSuffixFilter);
 
         $filteredFilePaths = array_filter(
             $filteredFilePaths,
@@ -70,17 +88,16 @@ final readonly class FilesFinder
 
         // filtering files in directories collection
         $directories = $this->fileAndDirectoryFilter->filterDirectories($filesAndDirectories);
-        $filteredFilePathsInDirectories = $this->findInDirectories($directories, $suffixes, $sortByName);
-        return [...$filteredFilePaths, ...$filteredFilePathsInDirectories];
-    }
+        $filteredFilePathsInDirectories = $this->findInDirectories(
+            $directories,
+            $suffixes,
+            $hasOnlySuffix,
+            $onlySuffix,
+            $sortByName
+        );
 
-    /**
-     * @param string[] $allFiles
-     * @return string[]
-     */
-    public function filterUnchangedFiles(array $allFiles): array
-    {
-        return $this->unchangedFilesFilter->filterFilePaths($allFiles);
+        $filePaths = [...$filteredFilePaths, ...$filteredFilePathsInDirectories];
+        return $this->unchangedFilesFilter->filterFilePaths($filePaths);
     }
 
     /**
@@ -93,8 +110,12 @@ final readonly class FilesFinder
             $this->changedFilesDetector->clear();
         }
 
-        $supportedFileExtensions = $configuration->getFileExtensions();
-        return $this->findInDirectoriesAndFiles($paths, $supportedFileExtensions);
+        return $this->findInDirectoriesAndFiles(
+            $paths,
+            $configuration->getFileExtensions(),
+            true,
+            $configuration->getOnlySuffix(),
+        );
     }
 
     /**
@@ -110,8 +131,13 @@ final readonly class FilesFinder
      * @param string[] $suffixes
      * @return string[]
      */
-    private function findInDirectories(array $directories, array $suffixes, bool $sortByName = true): array
-    {
+    private function findInDirectories(
+        array $directories,
+        array $suffixes,
+        bool $hasOnlySuffix,
+        ?string $onlySuffix = null,
+        bool $sortByName = true,
+    ): array {
         if ($directories === []) {
             return [];
         }
@@ -122,13 +148,16 @@ final readonly class FilesFinder
             ->size('> 0')
             ->in($directories);
 
-        if ($sortByName) {
-            $finder->sortByName();
-        }
-
-        if ($suffixes !== []) {
+        // filter files by specific suffix
+        if ($hasOnlySuffix) {
+            $finder->name('*' . $onlySuffix);
+        } elseif ($suffixes !== []) {
             $suffixesPattern = $this->normalizeSuffixesToPattern($suffixes);
             $finder->name($suffixesPattern);
+        }
+
+        if ($sortByName) {
+            $finder->sortByName();
         }
 
         $filePaths = [];

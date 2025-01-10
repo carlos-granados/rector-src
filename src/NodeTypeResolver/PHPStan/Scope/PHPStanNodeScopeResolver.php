@@ -4,31 +4,54 @@ declare(strict_types=1);
 
 namespace Rector\NodeTypeResolver\PHPStan\Scope;
 
+use Error;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
+use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\ArrowFunction;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\AssignOp;
+use PhpParser\Node\Expr\AssignRef;
 use PhpParser\Node\Expr\BinaryOp;
+use PhpParser\Node\Expr\BitwiseNot;
+use PhpParser\Node\Expr\BooleanNot;
 use PhpParser\Node\Expr\CallLike;
 use PhpParser\Node\Expr\Cast;
 use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Expr\Clone_;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Expr\ConstFetch;
+use PhpParser\Node\Expr\Empty_;
+use PhpParser\Node\Expr\ErrorSuppress;
+use PhpParser\Node\Expr\Eval_;
+use PhpParser\Node\Expr\Exit_;
 use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Expr\Include_;
+use PhpParser\Node\Expr\Instanceof_;
+use PhpParser\Node\Expr\Isset_;
 use PhpParser\Node\Expr\List_;
 use PhpParser\Node\Expr\Match_;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\NullsafeMethodCall;
+use PhpParser\Node\Expr\PostDec;
+use PhpParser\Node\Expr\PostInc;
+use PhpParser\Node\Expr\PreDec;
+use PhpParser\Node\Expr\PreInc;
+use PhpParser\Node\Expr\Print_;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Expr\StaticPropertyFetch;
 use PhpParser\Node\Expr\Ternary;
+use PhpParser\Node\Expr\Throw_;
+use PhpParser\Node\Expr\UnaryMinus;
+use PhpParser\Node\Expr\UnaryPlus;
 use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Expr\Yield_;
+use PhpParser\Node\Expr\YieldFrom;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\IntersectionType;
 use PhpParser\Node\Name;
@@ -40,23 +63,35 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Do_;
+use PhpParser\Node\Stmt\Echo_;
+use PhpParser\Node\Stmt\ElseIf_;
 use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\EnumCase;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Finally_;
+use PhpParser\Node\Stmt\For_;
 use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\Node\Stmt\Function_;
+use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Return_;
 use PhpParser\Node\Stmt\Switch_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\TryCatch;
+use PhpParser\Node\Stmt\Unset_;
+use PhpParser\Node\Stmt\While_;
 use PhpParser\Node\UnionType;
 use PhpParser\NodeTraverser;
 use PHPStan\Analyser\MutatingScope;
 use PHPStan\Analyser\NodeScopeResolver;
 use PHPStan\Analyser\ScopeContext;
+use PHPStan\Node\FunctionCallableNode;
+use PHPStan\Node\InstantiationCallableNode;
+use PHPStan\Node\MethodCallableNode;
+use PHPStan\Node\Printer\Printer;
+use PHPStan\Node\StaticMethodCallableNode;
 use PHPStan\Node\UnreachableStatementNode;
 use PHPStan\Node\VirtualNode;
 use PHPStan\Parser\ParserErrorsException;
@@ -70,8 +105,6 @@ use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\PHPStan\Scope\Contract\NodeVisitor\ScopeResolverNodeVisitorInterface;
 use Rector\PhpParser\Node\CustomNode\FileWithoutNamespace;
-use Rector\PHPStan\NodeVisitor\UnreachableStatementNodeVisitor;
-use Rector\PHPStan\NodeVisitor\WrappedNodeRestoringNodeVisitor;
 use Rector\Util\Reflection\PrivatesAccessor;
 use Webmozart\Assert\Assert;
 
@@ -127,11 +160,9 @@ final readonly class PHPStanNodeScopeResolver
 
         $scope = $formerMutatingScope ?? $this->scopeFactory->createFromFile($filePath);
 
-        $hasUnreachableStatementNode = false;
         $nodeCallback = function (Node $node, MutatingScope $mutatingScope) use (
             &$nodeCallback,
             $filePath,
-            &$hasUnreachableStatementNode
         ): void {
             // the class reflection is resolved AFTER entering to class node
             // so we need to get it from the first after this one
@@ -153,8 +184,7 @@ final readonly class PHPStanNodeScopeResolver
             // early check here as UnreachableStatementNode is special VirtualNode
             // so node to be checked inside
             if ($node instanceof UnreachableStatementNode) {
-                $this->processUnreachableStatementNode($node, $filePath, $mutatingScope);
-                $hasUnreachableStatementNode = true;
+                $this->processUnreachableStatementNode($node, $mutatingScope, $nodeCallback);
                 return;
             }
 
@@ -176,13 +206,45 @@ final readonly class PHPStanNodeScopeResolver
                 $node instanceof Expression ||
                 $node instanceof Return_ ||
                 $node instanceof EnumCase ||
-                $node instanceof Cast
+                $node instanceof Cast ||
+                $node instanceof YieldFrom ||
+                $node instanceof UnaryMinus ||
+                $node instanceof UnaryPlus ||
+                $node instanceof Throw_ ||
+                $node instanceof Empty_ ||
+                $node instanceof BooleanNot ||
+                $node instanceof Clone_ ||
+                $node instanceof ErrorSuppress ||
+                $node instanceof BitwiseNot ||
+                $node instanceof Eval_ ||
+                $node instanceof Print_ ||
+                $node instanceof Exit_ ||
+                $node instanceof ArrowFunction ||
+                $node instanceof Include_ ||
+                $node instanceof Instanceof_
             ) && $node->expr instanceof Expr) {
                 $node->expr->setAttribute(AttributeKey::SCOPE, $mutatingScope);
                 return;
             }
 
-            if ($node instanceof Assign || $node instanceof AssignOp) {
+            if ($node instanceof PostInc ||
+                $node instanceof PostDec ||
+                $node instanceof PreInc ||
+                $node instanceof PreDec) {
+                $node->var->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+                return;
+            }
+
+            if ($node instanceof ArrayDimFetch) {
+                $node->var->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+                if ($node->dim instanceof Expr) {
+                    $node->dim->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+                }
+
+                return;
+            }
+
+            if ($node instanceof Assign || $node instanceof AssignOp || $node instanceof AssignRef) {
                 $this->processAssign($node, $mutatingScope);
 
                 if ($node->var instanceof Variable && $node->var->name instanceof Expr) {
@@ -221,13 +283,24 @@ final readonly class PHPStanNodeScopeResolver
                 return;
             }
 
+            if ($node instanceof For_) {
+                foreach (array_merge($node->init, $node->cond, $node->loop) as $expr) {
+                    $expr->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+                    if ($expr instanceof BinaryOp) {
+                        $this->processBinaryOp($expr, $mutatingScope);
+                    }
+                }
+
+                return;
+            }
+
             if ($node instanceof Array_) {
                 $this->processArray($node, $mutatingScope);
                 return;
             }
 
             if ($node instanceof Property) {
-                $this->processProperty($node, $mutatingScope);
+                $this->processProperty($node, $mutatingScope, $nodeCallback);
                 return;
             }
 
@@ -290,20 +363,75 @@ final readonly class PHPStanNodeScopeResolver
                 $this->processMatch($node, $mutatingScope);
                 return;
             }
+
+            if ($node instanceof Yield_) {
+                $this->processYield($node, $mutatingScope);
+                return;
+            }
+
+            if ($node instanceof Isset_ || $node instanceof Unset_) {
+                $this->processIssetOrUnset($node, $mutatingScope);
+                return;
+            }
+
+            if ($node instanceof Echo_) {
+                $this->processEcho($node, $mutatingScope);
+                return;
+            }
+
+            if ($node instanceof If_ || $node instanceof ElseIf_ || $node instanceof Do_ || $node instanceof While_) {
+                $node->cond->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+                return;
+            }
+
+            if ($node instanceof MethodCallableNode || $node instanceof FunctionCallableNode || $node instanceof StaticMethodCallableNode || $node instanceof InstantiationCallableNode) {
+                $node->getOriginalNode()
+                    ->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+                $this->processCallike($node->getOriginalNode(), $mutatingScope);
+
+                return;
+            }
         };
 
-        $this->nodeScopeResolverProcessNodes($stmts, $scope, $nodeCallback);
+        try {
+            $this->nodeScopeResolverProcessNodes($stmts, $scope, $nodeCallback);
+        } catch (Error $error) {
+            if (! str_starts_with($error->getMessage(), 'Call to undefined method ' . Printer::class . '::pPHPStan_')) {
+                throw $error;
+            }
 
-        $nodeTraverser = new NodeTraverser();
-        $nodeTraverser->addVisitor(new WrappedNodeRestoringNodeVisitor());
-
-        if ($hasUnreachableStatementNode) {
-            $nodeTraverser->addVisitor(new UnreachableStatementNodeVisitor($this, $filePath, $scope));
+            // nothing we can do more precise here as error printing from deep internal PHPStan Printer service with service injection we cannot reset
+            // in the middle of process
+            // fallback to fill by found scope
+            RectorNodeScopeResolver::processNodes($stmts, $scope);
         }
 
-        $nodeTraverser->traverse($stmts);
-
         return $stmts;
+    }
+
+    private function processYield(Yield_ $yield, MutatingScope $mutatingScope): void
+    {
+        if ($yield->key instanceof Expr) {
+            $yield->key->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+        }
+
+        if ($yield->value instanceof Expr) {
+            $yield->value->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+        }
+    }
+
+    private function processIssetOrUnset(Isset_|Unset_ $node, MutatingScope $mutatingScope): void
+    {
+        foreach ($node->vars as $var) {
+            $var->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+        }
+    }
+
+    private function processEcho(Echo_ $echo, MutatingScope $mutatingScope): void
+    {
+        foreach ($echo->exprs as $expr) {
+            $expr->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+        }
     }
 
     private function processMatch(Match_ $match, MutatingScope $mutatingScope): void
@@ -356,7 +484,7 @@ final readonly class PHPStanNodeScopeResolver
         }
     }
 
-    private function processAssign(Assign|AssignOp $assign, MutatingScope $mutatingScope): void
+    private function processAssign(Assign|AssignOp|AssignRef $assign, MutatingScope $mutatingScope): void
     {
         $assign->var->setAttribute(AttributeKey::SCOPE, $mutatingScope);
         $assign->expr->setAttribute(AttributeKey::SCOPE, $mutatingScope);
@@ -416,6 +544,8 @@ final readonly class PHPStanNodeScopeResolver
 
     private function processSwitch(Switch_ $switch, MutatingScope $mutatingScope): void
     {
+        $switch->cond->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+
         // decorate value as well
         foreach ($switch->cases as $case) {
             $case->setAttribute(AttributeKey::SCOPE, $mutatingScope);
@@ -443,19 +573,27 @@ final readonly class PHPStanNodeScopeResolver
         }
     }
 
+    /**
+     * @param callable(Node $node, MutatingScope $scope): void $nodeCallback
+     */
     private function processUnreachableStatementNode(
         UnreachableStatementNode $unreachableStatementNode,
-        string $filePath,
-        MutatingScope $mutatingScope
+        MutatingScope $mutatingScope,
+        callable $nodeCallback
     ): void {
         $originalStmt = $unreachableStatementNode->getOriginalStatement();
-        $originalStmt->setAttribute(AttributeKey::IS_UNREACHABLE, true);
-        $originalStmt->setAttribute(AttributeKey::SCOPE, $mutatingScope);
 
-        $this->processNodes([$originalStmt], $filePath, $mutatingScope);
+        $this->nodeScopeResolverProcessNodes(
+            array_merge([$originalStmt], $unreachableStatementNode->getNextStatements()),
+            $mutatingScope,
+            $nodeCallback
+        );
     }
 
-    private function processProperty(Property $property, MutatingScope $mutatingScope): void
+    /**
+     * @param callable(Node $node, MutatingScope $scope): void $nodeCallback
+     */
+    private function processProperty(Property $property, MutatingScope $mutatingScope, callable $nodeCallback): void
     {
         foreach ($property->props as $propertyProperty) {
             $propertyProperty->setAttribute(AttributeKey::SCOPE, $mutatingScope);
@@ -463,6 +601,18 @@ final readonly class PHPStanNodeScopeResolver
             if ($propertyProperty->default instanceof Expr) {
                 $propertyProperty->default->setAttribute(AttributeKey::SCOPE, $mutatingScope);
             }
+        }
+
+        foreach ($property->hooks as $hook) {
+            if ($hook->body === null) {
+                continue;
+            }
+
+            /** @var Stmt[] $stmts */
+            $stmts = $hook->body instanceof Expr
+                ? [new Expression($hook->body)]
+                : [$hook->body];
+            $this->nodeScopeResolverProcessNodes($stmts, $mutatingScope, $nodeCallback);
         }
     }
 

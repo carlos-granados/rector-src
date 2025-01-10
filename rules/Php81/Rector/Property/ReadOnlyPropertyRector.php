@@ -23,7 +23,7 @@ use Rector\Comments\NodeDocBlock\DocBlockUpdater;
 use Rector\NodeAnalyzer\ParamAnalyzer;
 use Rector\NodeManipulator\PropertyFetchAssignManipulator;
 use Rector\NodeManipulator\PropertyManipulator;
-use Rector\NodeTypeResolver\Node\AttributeKey;
+use Rector\Php81\NodeManipulator\AttributeGroupNewLiner;
 use Rector\PhpParser\Node\BetterNodeFinder;
 use Rector\PHPStan\ScopeFetcher;
 use Rector\Privatization\NodeManipulator\VisibilityManipulator;
@@ -47,7 +47,8 @@ final class ReadOnlyPropertyRector extends AbstractRector implements MinPhpVersi
         private readonly VisibilityManipulator $visibilityManipulator,
         private readonly BetterNodeFinder $betterNodeFinder,
         private readonly PhpDocInfoFactory $phpDocInfoFactory,
-        private readonly DocBlockUpdater $docBlockUpdater
+        private readonly DocBlockUpdater $docBlockUpdater,
+        private readonly AttributeGroupNewLiner $attributeGroupNewLiner
     ) {
     }
 
@@ -174,7 +175,7 @@ CODE_SAMPLE
 
         $attributeGroups = $property->attrGroups;
         if ($attributeGroups !== []) {
-            $property->setAttribute(AttributeKey::ORIGINAL_NODE, null);
+            $this->attributeGroupNewLiner->newLine($this->file, $property);
         }
 
         $this->removeReadOnlyDoc($property);
@@ -214,11 +215,15 @@ CODE_SAMPLE
         }
 
         // early check not property promotion and already readonly
-        if ($param->flags === 0 || $this->visibilityManipulator->isReadonly($param)) {
+        if (! $param->isPromoted() || $this->visibilityManipulator->isReadonly($param)) {
             return null;
         }
 
         if ($this->propertyManipulator->isPropertyChangeableExceptConstructor($class, $param, $scope)) {
+            return null;
+        }
+
+        if ($param->byRef) {
             return null;
         }
 
@@ -231,7 +236,7 @@ CODE_SAMPLE
         }
 
         if ($param->attrGroups !== []) {
-            $param->setAttribute(AttributeKey::ORIGINAL_NODE, null);
+            $this->attributeGroupNewLiner->newLine($this->file, $param);
         }
 
         $this->visibilityManipulator->makeReadonly($param);
@@ -248,7 +253,7 @@ CODE_SAMPLE
             return false;
         }
 
-        if ($param->flags === 0) {
+        if (! $param->isPromoted()) {
             return false;
         }
 

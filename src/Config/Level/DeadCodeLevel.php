@@ -9,6 +9,7 @@ use Rector\Contract\Rector\RectorInterface;
 use Rector\DeadCode\Rector\Array_\RemoveDuplicatedArrayKeyRector;
 use Rector\DeadCode\Rector\Assign\RemoveDoubleAssignRector;
 use Rector\DeadCode\Rector\Assign\RemoveUnusedVariableAssignRector;
+use Rector\DeadCode\Rector\Block\ReplaceBlockToItsStmtsRector;
 use Rector\DeadCode\Rector\BooleanAnd\RemoveAndTrueRector;
 use Rector\DeadCode\Rector\Cast\RecastingRemovalRector;
 use Rector\DeadCode\Rector\ClassConst\RemoveUnusedPrivateClassConstantRector;
@@ -20,6 +21,7 @@ use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodParameterRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPromotedPropertyRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPublicMethodParameterRector;
+use Rector\DeadCode\Rector\ClassMethod\RemoveUselessAssignFromPropertyPromotionRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUselessParamTagRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUselessReturnExprInConstructRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUselessReturnTagRector;
@@ -82,10 +84,12 @@ final class DeadCodeLevel
         RemoveUnusedNonEmptyArrayBeforeForeachRector::class,
         RemoveNullPropertyInitializationRector::class,
         RemoveUselessReturnExprInConstructRector::class,
+        ReplaceBlockToItsStmtsRector::class,
 
         RemoveTypedPropertyDeadInstanceOfRector::class,
         TernaryToBooleanOrFalseToBooleanAndRector::class,
         RemoveDoubleAssignRector::class,
+        RemoveUselessAssignFromPropertyPromotionRector::class,
         RemoveConcatAutocastRector::class,
         SimplifyIfElseWithSameContentRector::class,
         SimplifyUselessVariableRector::class,

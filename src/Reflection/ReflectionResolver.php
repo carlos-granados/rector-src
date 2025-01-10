@@ -31,6 +31,7 @@ use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\NodeTypeResolver;
 use Rector\StaticTypeMapper\Resolver\ClassNameFromObjectTypeResolver;
+use Rector\StaticTypeMapper\ValueObject\Type\AliasedObjectType;
 use Rector\StaticTypeMapper\ValueObject\Type\ShortenedObjectType;
 use Rector\ValueObject\MethodName;
 
@@ -142,7 +143,7 @@ final readonly class ReflectionResolver
     {
         $objectType = $this->nodeTypeResolver->getType($staticCall->class);
 
-        if ($objectType instanceof ShortenedObjectType) {
+        if ($objectType instanceof ShortenedObjectType || $objectType instanceof AliasedObjectType) {
             /** @var array<class-string> $classNames */
             $classNames = [$objectType->getFullyQualifiedName()];
         } else {
@@ -293,8 +294,9 @@ final readonly class ReflectionResolver
             return null;
         }
 
-        if ($this->reflectionProvider->hasFunction($funcCall->name, $scope)) {
-            return $this->reflectionProvider->getFunction($funcCall->name, $scope);
+        $functionName = new Name((string) $this->nodeNameResolver->getName($funcCall));
+        if ($this->reflectionProvider->hasFunction($functionName, $scope)) {
+            return $this->reflectionProvider->getFunction($functionName, $scope);
         }
 
         return null;

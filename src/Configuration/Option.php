@@ -105,6 +105,11 @@ final class Option
     public const CLEAR_CACHE = 'clear-cache';
 
     /**
+     * @var string
+     */
+    public const ONLY = 'only';
+
+    /**
      * @internal Use @see \Rector\Config\RectorConfig::parallel() instead
      * @var string
      */
@@ -281,4 +286,9 @@ final class Option
      * @var string
      */
     public const COMPOSER_BASED_SETS = 'composer_based_sets';
+
+    /**
+     * @internal To filter files by specific suffix
+     */
+    public const ONLY_SUFFIX = 'only-suffix';
 }

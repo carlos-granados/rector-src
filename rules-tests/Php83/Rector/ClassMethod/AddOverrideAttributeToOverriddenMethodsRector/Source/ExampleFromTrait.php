@@ -4,9 +4,7 @@ namespace Rector\Tests\Php83\Rector\ClassMethod\AddOverrideAttributeToOverridden
 
 trait ExampleFromTrait
 {
-    public abstract function foo();
-
-    public function bar()
+    public function run()
     {
         $value = 'non empty';
     }

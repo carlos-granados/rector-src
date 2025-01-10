@@ -13,6 +13,7 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrowFunction;
 use PhpParser\Node\Expr\CallLike;
+use PhpParser\Node\Expr\Match_;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\Ternary;
 use PhpParser\Node\Expr\Yield_;
@@ -23,6 +24,7 @@ use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\InterpolatedString;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Declare_;
+use PhpParser\Node\Stmt\InlineHTML;
 use PhpParser\Node\Stmt\Nop;
 use PhpParser\PrettyPrinter\Standard;
 use PHPStan\Node\Expr\AlwaysRememberedExpr;
@@ -30,6 +32,7 @@ use Rector\Configuration\Option;
 use Rector\Configuration\Parameter\SimpleParameterProvider;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\PhpParser\Node\CustomNode\FileWithoutNamespace;
+use Rector\Util\NewLineSplitter;
 
 /**
  * @see \Rector\Tests\PhpParser\Printer\BetterStandardPrinterTest
@@ -38,12 +41,6 @@ use Rector\PhpParser\Node\CustomNode\FileWithoutNamespace;
  */
 final class BetterStandardPrinter extends Standard
 {
-    /**
-     * @var string
-     * @see https://regex101.com/r/DrsMY4/1
-     */
-    private const QUOTED_SLASH_REGEX = "#'|\\\\(?=[\\\\']|$)#";
-
     /**
      * Remove extra spaces before new Nop_ nodes
      * @see https://regex101.com/r/iSvroO/1
@@ -119,8 +116,23 @@ final class BetterStandardPrinter extends Standard
         int $lhsPrecedence = self::MAX_PRECEDENCE,
         bool $parentFormatPreserved = false
     ): string {
+        // handle already AlwaysRememberedExpr
+        // @see https://github.com/rectorphp/rector/issues/8815#issuecomment-2503453191
         while ($node instanceof AlwaysRememberedExpr) {
             $node = $node->getExpr();
+        }
+
+        // handle overlapped origNode is Match_
+        // and its subnodes still have AlwaysRememberedExpr
+        $originalNode = $node->getAttribute(AttributeKey::ORIGINAL_NODE);
+
+        if ($originalNode instanceof Match_) {
+            $subNodeNames = $node->getSubNodeNames();
+            foreach ($subNodeNames as $subNodeName) {
+                while ($originalNode->{$subNodeName} instanceof AlwaysRememberedExpr) {
+                    $originalNode->{$subNodeName} = $originalNode->{$subNodeName}->getExpr();
+                }
+            }
         }
 
         $content = parent::p($node, $precedence, $lhsPrecedence, $parentFormatPreserved);
@@ -251,20 +263,6 @@ final class BetterStandardPrinter extends Standard
     }
 
     /**
-     * Do not preslash all slashes (parent behavior), but only those:
-     *
-     * - followed by "\"
-     * - by "'"
-     * - or the end of the string
-     *
-     * Prevents `Vendor\Class` => `Vendor\\Class`.
-     */
-    protected function pSingleQuotedString(string $string): string
-    {
-        return "'" . Strings::replace($string, self::QUOTED_SLASH_REGEX, '\\\\$0') . "'";
-    }
-
-    /**
      * Emulates 1_000 in PHP 7.3- version
      */
     protected function pScalar_Float(Float_ $float): string
@@ -325,11 +323,7 @@ final class BetterStandardPrinter extends Standard
     {
         if ($string->getAttribute(AttributeKey::DOC_INDENTATION) === '__REMOVED__') {
             $content = parent::pScalar_String($string);
-
-            $lines = explode("\n", $content);
-            $trimmedLines = array_map('ltrim', $lines);
-
-            return implode("\n", $trimmedLines);
+            return $this->cleanStartIndentationOnHeredocNowDoc($content);
         }
 
         $isRegularPattern = (bool) $string->getAttribute(AttributeKey::IS_REGULAR_PATTERN, false);
@@ -375,29 +369,10 @@ final class BetterStandardPrinter extends Standard
         $content = parent::pScalar_InterpolatedString($interpolatedString);
 
         if ($interpolatedString->getAttribute(AttributeKey::DOC_INDENTATION) === '__REMOVED__') {
-            $lines = explode("\n", $content);
-            $trimmedLines = array_map('ltrim', $lines);
-
-            return implode("\n", $trimmedLines);
+            return $this->cleanStartIndentationOnHeredocNowDoc($content);
         }
 
         return $content;
-    }
-
-    protected function pCommaSeparated(array $nodes): string
-    {
-        $result = parent::pCommaSeparated($nodes);
-
-        $last = end($nodes);
-
-        if ($last instanceof Node) {
-            $trailingComma = $last->getAttribute(AttributeKey::FUNC_ARGS_TRAILING_COMMA);
-            if ($trailingComma === false) {
-                $result = rtrim($result, ',');
-            }
-        }
-
-        return $result;
     }
 
     /**
@@ -448,7 +423,16 @@ final class BetterStandardPrinter extends Standard
             . ($param->byRef ? '&' : '')
             . ($param->variadic ? '...' : '')
             . $this->p($param->var)
-            . ($param->default instanceof Expr ? ' = ' . $this->p($param->default) : '');
+            . ($param->default instanceof Expr ? ' = ' . $this->p($param->default) : '')
+            . ($param->hooks !== [] ? ' {' . $this->pStmts($param->hooks) . $this->nl . '}' : '');
+    }
+
+    private function cleanStartIndentationOnHeredocNowDoc(string $content): string
+    {
+        $lines = NewLineSplitter::split($content);
+        $trimmedLines = array_map('ltrim', $lines);
+
+        return implode("\n", $trimmedLines);
     }
 
     private function resolveIndentSpaces(): string
@@ -492,13 +476,20 @@ final class BetterStandardPrinter extends Standard
      */
     private function containsNop(array $nodes): bool
     {
+        $hasNop = false;
         foreach ($nodes as $node) {
+            // early false when visited Node is InlineHTML
+            if ($node instanceof InlineHTML) {
+                return false;
+            }
+
+            // use flag to avoid next is InlineHTML that returns early
             if ($node instanceof Nop) {
-                return true;
+                $hasNop = true;
             }
         }
 
-        return false;
+        return $hasNop;
     }
 
     private function wrapValueWith(String_ $string, string $wrap): string

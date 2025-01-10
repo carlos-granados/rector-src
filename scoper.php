@@ -73,16 +73,21 @@ return [
 
         // make external rules easier to write without enforing getRuleDefinition()
         // as they are not designed for open-sourcing
+        // remove implements is the safest way to avoid error on conflict with real dependency of symplify/rule-doc-generator
         static function (string $filePath, string $prefix, string $content): string {
-            if (! \str_ends_with(
-                $filePath,
-                'vendor/symplify/rule-doc-generator-contracts/src/Contract/DocumentedRuleInterface.php'
-            )) {
+            if (! \str_ends_with($filePath, 'src/Contract/Rector/RectorInterface.php')) {
                 return $content;
             }
 
-            // comment out
-            return str_replace('public function getRuleDefinition', '// public function getRuleDefinition', $content);
+            // remove DocumentedRuleInterface implements
+            $content = str_replace(
+                'interface RectorInterface extends NodeVisitor, DocumentedRuleInterface',
+                'interface RectorInterface extends NodeVisitor',
+                $content
+            );
+
+            // remove use import itself, to make contract clean
+            return str_replace('use Symplify\RuleDocGenerator\Contract\DocumentedRuleInterface;', '', $content);
         },
 
         static function (string $filePath, string $prefix, string $content): string {
@@ -124,6 +129,15 @@ return [
             }
 
             return Unprefixer::unprefixQuoted($content, $prefix);
+        },
+
+        // unprefix regex content on doctrine inflector
+        static function (string $filePath, string $prefix, string $content): string {
+            if (! \str_contains($filePath, 'vendor/doctrine/inflector')) {
+                return $content;
+            }
+
+            return str_replace("'" . $prefix . '\\', "'\\", $content);
         },
 
         static function (string $filePath, string $prefix, string $content): string {

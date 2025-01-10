@@ -9,11 +9,13 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\BinaryOp\Coalesce;
 use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\NullsafeMethodCall;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Expr\Ternary;
+use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\ClassConst;
@@ -23,6 +25,7 @@ use PhpParser\Node\UnionType as NodeUnionType;
 use PHPStan\Analyser\Scope;
 use PHPStan\Broker\ClassAutoloadingException;
 use PHPStan\Reflection\ClassReflection;
+use PHPStan\Reflection\Native\NativeFunctionReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\ArrayType;
 use PHPStan\Type\Constant\ConstantArrayType;
@@ -41,6 +44,7 @@ use PHPStan\Type\UnionType;
 use Rector\Configuration\RenamedClassesDataCollector;
 use Rector\Exception\ShouldNotHappenException;
 use Rector\NodeAnalyzer\ClassAnalyzer;
+use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Contract\NodeTypeResolverAwareInterface;
 use Rector\NodeTypeResolver\Contract\NodeTypeResolverInterface;
 use Rector\NodeTypeResolver\Node\AttributeKey;
@@ -73,6 +77,7 @@ final class NodeTypeResolver
         private readonly ReflectionProvider $reflectionProvider,
         private readonly AccessoryNonEmptyStringTypeCorrector $accessoryNonEmptyStringTypeCorrector,
         private readonly RenamedClassesDataCollector $renamedClassesDataCollector,
+        private readonly NodeNameResolver $nodeNameResolver,
         iterable $nodeTypeResolvers
     ) {
         foreach ($nodeTypeResolvers as $nodeTypeResolver) {
@@ -171,7 +176,12 @@ final class NodeTypeResolver
 
             if ($type instanceof ObjectType) {
                 $scope = $node->getAttribute(AttributeKey::SCOPE);
-                $type = $this->objectTypeSpecifier->narrowToFullyQualifiedOrAliasedObjectType($node, $type, $scope);
+                $type = $this->objectTypeSpecifier->narrowToFullyQualifiedOrAliasedObjectType(
+                    $node,
+                    $type,
+                    $scope,
+                    true
+                );
             }
 
             return $type;
@@ -347,7 +357,7 @@ final class NodeTypeResolver
         Type $originalNativeType
     ): Type {
         $nativeVariableType = $scope->getNativeType($arrayDimFetch->var);
-        if ($nativeVariableType instanceof MixedType || ($nativeVariableType instanceof ArrayType && $nativeVariableType->getItemType() instanceof MixedType)) {
+        if ($nativeVariableType instanceof MixedType || ($nativeVariableType instanceof ArrayType && $nativeVariableType->getIterableValueType() instanceof MixedType)) {
             return $originalNativeType;
         }
 
@@ -552,6 +562,24 @@ final class NodeTypeResolver
             if ($callerType instanceof ObjectType && $callerType->getClassReflection() instanceof ClassReflection && $callerType->getClassReflection()->isBuiltin()) {
                 return $scope->getType($expr);
             }
+        }
+
+        if ($expr instanceof FuncCall) {
+            if (! $expr->name instanceof Name) {
+                return $scope->getNativeType($expr);
+            }
+
+            $functionName = new Name((string) $this->nodeNameResolver->getName($expr));
+            if (! $this->reflectionProvider->hasFunction($functionName, $scope)) {
+                return $scope->getNativeType($expr);
+            }
+
+            $functionReflection = $this->reflectionProvider->getFunction($functionName, $scope);
+            if (! $functionReflection instanceof NativeFunctionReflection) {
+                return $scope->getNativeType($expr);
+            }
+
+            return $scope->getType($expr);
         }
 
         return $scope->getNativeType($expr);

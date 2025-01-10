@@ -142,7 +142,7 @@ CODE_SAMPLE
         }
 
         $arrayStaticType = $this->getType($expr);
-        if (! $arrayStaticType->isArray()->yes()) {
+        if (! $arrayStaticType instanceof ArrayType && ! $arrayStaticType instanceof ConstantArrayType) {
             return true;
         }
 
@@ -151,7 +151,7 @@ CODE_SAMPLE
 
     private function isArrayKeyTypeAllowed(ArrayType|ConstantArrayType $arrayType): bool
     {
-        if ($arrayType->getKeyType()->isInteger()->yes()) {
+        if ($arrayType->getIterableKeyType()->isInteger()->yes()) {
             return true;
         }
 

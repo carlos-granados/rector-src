@@ -20,6 +20,7 @@ use PHPStan\Analyser\MutatingScope;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use Rector\Application\ChangedNodeScopeRefresher;
+use Rector\Application\NodeAttributeReIndexer;
 use Rector\Application\Provider\CurrentFileProvider;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
 use Rector\ChangesReporting\ValueObject\RectorWithLineChange;
@@ -135,10 +136,10 @@ CODE_SAMPLE;
             return null;
         }
 
-        $this->changedNodeScopeRefresher->reIndexNodeAttributes($node);
-
         // ensure origNode pulled before refactor to avoid changed during refactor, ref https://3v4l.org/YMEGN
         $originalNode = $node->getAttribute(AttributeKey::ORIGINAL_NODE) ?? $node;
+
+        NodeAttributeReIndexer::reIndexNodeAttributes($node);
 
         $refactoredNode = $this->refactor($node);
 
@@ -162,7 +163,7 @@ CODE_SAMPLE;
                 true
             )) {
                 // notify this rule changing code
-                $rectorWithLineChange = new RectorWithLineChange(static::class, $originalNode->getLine());
+                $rectorWithLineChange = new RectorWithLineChange(static::class, $originalNode->getStartLine());
                 $this->file->addRectorClassWithLine($rectorWithLineChange);
 
                 return $refactoredNode;
