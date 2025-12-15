@@ -125,6 +125,11 @@ CODE_SAMPLE
         $assertStaticCallStmts = [];
 
         foreach ($node->getParams() as $param) {
+            // Skip variadic parameters - they collect multiple values
+            if ($param->variadic) {
+                continue;
+            }
+
             if (! $param->type instanceof Identifier) {
                 continue;
             }
