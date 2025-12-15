@@ -24,6 +24,7 @@ use Rector\Arguments\ValueObject\ArgumentAdderWithoutDefaultValue;
 use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Enum\ObjectReference;
 use Rector\Exception\ShouldNotHappenException;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\PhpParser\AstResolver;
 use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
 use Rector\Rector\AbstractRector;
@@ -48,7 +49,8 @@ final class ArgumentAdderRector extends AbstractRector implements ConfigurableRe
         private readonly ArgumentAddingScope $argumentAddingScope,
         private readonly ChangedArgumentsDetector $changedArgumentsDetector,
         private readonly AstResolver $astResolver,
-        private readonly StaticTypeMapper $staticTypeMapper
+        private readonly StaticTypeMapper $staticTypeMapper,
+        private readonly ArgsAnalyzer $argsAnalyzer
     ) {
     }
 
@@ -250,7 +252,7 @@ CODE_SAMPLE
         }
 
         // Skip if any existing args use named arguments
-        if ($this->hasNamedArguments($node)) {
+        if ($this->argsAnalyzer->hasNamedArg($node->getArgs())) {
             return true;
         }
 
@@ -381,16 +383,5 @@ CODE_SAMPLE
 
             $this->processPositionWithDefaultValues($classMethod, $addedArgument);
         }
-    }
-
-    private function hasNamedArguments(MethodCall | StaticCall $call): bool
-    {
-        foreach ($call->getArgs() as $arg) {
-            if ($arg->name !== null) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
