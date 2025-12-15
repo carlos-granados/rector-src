@@ -249,6 +249,11 @@ CODE_SAMPLE
             return $this->changedArgumentsDetector->isTypeChanged($param, $argumentAdder->getArgumentType());
         }
 
+        // Skip if any existing args use named arguments
+        if ($this->hasNamedArguments($node)) {
+            return true;
+        }
+
         if (isset($node->args[$position])) {
             return true;
         }
@@ -376,5 +381,16 @@ CODE_SAMPLE
 
             $this->processPositionWithDefaultValues($classMethod, $addedArgument);
         }
+    }
+
+    private function hasNamedArguments(MethodCall | StaticCall $call): bool
+    {
+        foreach ($call->getArgs() as $arg) {
+            if ($arg->name !== null) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
