@@ -15,6 +15,7 @@ use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -31,6 +32,11 @@ final class DateFuncCallToCarbonRector extends AbstractRector
         ['minutes', 60],
         ['seconds', 1],
     ];
+
+    public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer,
+    ) {
+    }
 
     public function getRuleDefinition(): RuleDefinition
     {
@@ -89,6 +95,11 @@ CODE_SAMPLE
         }
 
         if ($node->isFirstClassCallable()) {
+            return null;
+        }
+
+        // Skip if any argument uses named parameter syntax
+        if ($this->argsAnalyzer->hasNamedArg($node->getArgs())) {
             return null;
         }
 
