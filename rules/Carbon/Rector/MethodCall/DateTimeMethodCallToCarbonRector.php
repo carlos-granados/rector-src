@@ -11,6 +11,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Scalar\String_;
 use Rector\Carbon\NodeFactory\CarbonCallFactory;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -21,7 +22,8 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 final class DateTimeMethodCallToCarbonRector extends AbstractRector
 {
     public function __construct(
-        private readonly CarbonCallFactory $carbonCallFactory
+        private readonly CarbonCallFactory $carbonCallFactory,
+        private readonly ArgsAnalyzer $argsAnalyzer
     ) {
     }
 
@@ -85,6 +87,10 @@ CODE_SAMPLE
 
         if (count($new->getArgs()) !== 1) {
             // @todo handle in separate static call
+            return null;
+        }
+
+        if ($this->argsAnalyzer->hasNamedArg($new->getArgs())) {
             return null;
         }
 
