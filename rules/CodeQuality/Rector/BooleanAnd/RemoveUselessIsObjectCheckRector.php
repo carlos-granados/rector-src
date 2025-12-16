@@ -8,6 +8,7 @@ use PhpParser\Node;
 use PhpParser\Node\Expr\BinaryOp\BooleanAnd;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\Instanceof_;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -17,6 +18,11 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class RemoveUselessIsObjectCheckRector extends AbstractRector
 {
+    public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer
+    ) {
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -66,6 +72,11 @@ final class RemoveUselessIsObjectCheckRector extends AbstractRector
         }
 
         $args = $funcCall->getArgs();
+
+        if ($this->argsAnalyzer->hasNamedArg($args)) {
+            return null;
+        }
+
         if (! isset($args[0])) {
             return null;
         }
