@@ -11,6 +11,7 @@ use PhpParser\Node\Expr\BinaryOp\Identical;
 use PhpParser\Node\Expr\Empty_;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\Variable;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\NodeManipulator\BinaryOpManipulator;
 use Rector\Php71\ValueObject\TwoNodeMatch;
 use Rector\Rector\AbstractRector;
@@ -23,7 +24,8 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 final class SimplifyEmptyArrayCheckRector extends AbstractRector
 {
     public function __construct(
-        private readonly BinaryOpManipulator $binaryOpManipulator
+        private readonly BinaryOpManipulator $binaryOpManipulator,
+        private readonly ArgsAnalyzer $argsAnalyzer
     ) {
     }
 
@@ -92,12 +94,18 @@ final class SimplifyEmptyArrayCheckRector extends AbstractRector
                     return false;
                 }
 
+                $args = $node->getArgs();
+
+                if ($this->argsAnalyzer->hasNamedArg($args)) {
+                    return false;
+                }
+
                 if (! $this->isName($node, 'is_array')) {
                     return false;
                 }
 
-                if (isset($node->getArgs()[0])) {
-                    return $node->getArgs()[0]
+                if (isset($args[0])) {
+                    return $args[0]
                         ->value instanceof Variable;
                 }
 

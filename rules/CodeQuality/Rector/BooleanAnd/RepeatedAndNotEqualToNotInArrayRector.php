@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Rector\CodeQuality\Rector\BooleanAnd;
 
-use PhpParser\Node\Expr\PropertyFetch;
-use PhpParser\Node\Expr\ArrayDimFetch;
-use PhpParser\Node\Expr\MethodCall;
-use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\BinaryOp\BooleanAnd;
 use PhpParser\Node\Expr\BinaryOp\NotEqual;
 use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\BooleanNot;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\PropertyFetch;
+use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Name;
 use Rector\CodeQuality\ValueObject\ComparedExprAndValueExpr;
@@ -149,9 +149,10 @@ CODE_SAMPLE
         if ($expr instanceof Variable) {
             return false;
         }
+
         // Property access, array access, method calls are not comparison values
         // Scalars, constants, arrays are comparison values
-        return !($expr instanceof PropertyFetch || $expr instanceof ArrayDimFetch || $expr instanceof MethodCall || $expr instanceof StaticCall || $expr instanceof FuncCall);
+        return ! ($expr instanceof PropertyFetch || $expr instanceof ArrayDimFetch || $expr instanceof MethodCall || $expr instanceof StaticCall || $expr instanceof FuncCall);
     }
 
     /**
