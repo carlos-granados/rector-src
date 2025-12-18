@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Rector\Tests\CodeQuality\Rector\ClassConstFetch\VariableConstFetchToClassConstFetchRector\Source;
 
-class ClassWithConstants
+final class FinalClassWithConstant
 {
-    public const NAME = 'SomeName';
+    public const CONSTANT_NAME = 'value';
 
-    public const ORIGINAL_VALUE = 123;
-
-    public const VALUE = 'SomeValue';
+    public const NAME = 'FinalName';
 }

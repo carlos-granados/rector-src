@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Rector\Tests\CodeQuality\Rector\ClassConstFetch\VariableConstFetchToClassConstFetchRector\Source;
 
-class ClassWithConstants
+interface InterfaceWithConstant
 {
-    public const NAME = 'SomeName';
-
-    public const ORIGINAL_VALUE = 123;
-
-    public const VALUE = 'SomeValue';
+    public const INTERFACE_CONSTANT = 'interface_value';
 }
