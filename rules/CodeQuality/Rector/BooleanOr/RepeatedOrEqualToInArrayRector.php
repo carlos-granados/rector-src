@@ -7,11 +7,16 @@ namespace Rector\CodeQuality\Rector\BooleanOr;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\BinaryOp\BooleanOr;
 use PhpParser\Node\Expr\BinaryOp\Equal;
 use PhpParser\Node\Expr\BinaryOp\Identical;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\PropertyFetch;
+use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Name;
 use Rector\CodeQuality\ValueObject\ComparedExprAndValueExpr;
 use Rector\PhpParser\Node\BetterNodeFinder;
@@ -130,7 +135,30 @@ CODE_SAMPLE
 
     private function matchComparedExprAndValueExpr(Identical|Equal $expr): ComparedExprAndValueExpr
     {
+        // Handle both orders: $var === 'value' and 'value' === $var
+        // We want the variable/expression on the left, and the comparison value on the right
+        if ($this->isComparisonValue($expr->left) && ! $this->isComparisonValue($expr->right)) {
+            // Reversed: 'value' === $var -> normalize to $var, 'value'
+            return new ComparedExprAndValueExpr($expr->right, $expr->left);
+        }
+
+        // Normal order: $var === 'value'
         return new ComparedExprAndValueExpr($expr->left, $expr->right);
+    }
+
+    /**
+     * Check if an expression is a simple comparison value (not a variable or complex expression)
+     */
+    private function isComparisonValue(Expr $expr): bool
+    {
+        // Variables and complex expressions are not comparison values
+        if ($expr instanceof Variable) {
+            return false;
+        }
+
+        // Property access, array access, method calls are not comparison values
+        // Scalars, constants, arrays are comparison values
+        return ! ($expr instanceof PropertyFetch || $expr instanceof ArrayDimFetch || $expr instanceof MethodCall || $expr instanceof StaticCall || $expr instanceof FuncCall);
     }
 
     /**
