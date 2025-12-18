@@ -9,6 +9,7 @@ use PhpParser\Node\Expr\BinaryOp\Concat;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Scalar\MagicConst\Dir;
 use PhpParser\Node\Scalar\String_;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -18,6 +19,11 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class DirnameDirConcatStringToDirectStringPathRector extends AbstractRector
 {
+    public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer
+    ) {
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition('Change dirname() and string concat, to __DIR__ and direct string path', [
@@ -66,6 +72,11 @@ CODE_SAMPLE
 
         $dirnameFuncCall = $node->left;
         if ($dirnameFuncCall->isFirstClassCallable()) {
+            return null;
+        }
+
+        // skip named arguments
+        if ($this->argsAnalyzer->hasNamedArg($dirnameFuncCall->getArgs())) {
             return null;
         }
 
