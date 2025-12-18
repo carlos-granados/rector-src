@@ -13,6 +13,7 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Property;
+use PhpParser\Node\Stmt\TryCatch;
 use Rector\NodeAnalyzer\ExprAnalyzer;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\Rector\AbstractRector;
@@ -86,8 +87,13 @@ CODE_SAMPLE
         }
 
         foreach ($constructClassMethod->stmts as $key => $stmt) {
-            // code that is possibly breaking flow
+            // code that is possibly breaking flow - skip
             if ($stmt instanceof If_) {
+                return null;
+            }
+
+            // try-catch can have different values assigned - skip
+            if ($stmt instanceof TryCatch) {
                 return null;
             }
 
@@ -173,6 +179,11 @@ CODE_SAMPLE
 
             foreach ($classStmt->props as $propertyProperty) {
                 if (! $this->isName($propertyProperty, $propertyName)) {
+                    continue;
+                }
+
+                // property already has a default - skip to avoid overwriting
+                if ($propertyProperty->default instanceof Expr) {
                     continue;
                 }
 
