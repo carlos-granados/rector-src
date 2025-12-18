@@ -6,6 +6,7 @@ namespace Rector\CodeQuality\Rector\Class_;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\Yield_;
+use PhpParser\Node\Expr\YieldFrom;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -116,7 +117,10 @@ CODE_SAMPLE
 
     private function hasYields(ClassMethod $classMethod): bool
     {
-        $yields = $this->betterNodeFinder->findInstancesOfScoped((array) $classMethod->stmts, Yield_::class);
+        $yields = $this->betterNodeFinder->findInstancesOfScoped(
+            (array) $classMethod->stmts,
+            [Yield_::class, YieldFrom::class]
+        );
 
         return $yields !== [];
     }
