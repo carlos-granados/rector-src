@@ -7,6 +7,7 @@ namespace Rector\CodeQuality\Rector\ClassMethod;
 use PhpParser\Node;
 use PhpParser\Node\ComplexType;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\ArrowFunction;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Identifier;
@@ -68,13 +69,13 @@ CODE_SAMPLE
      */
     public function getNodeTypes(): array
     {
-        return [ClassMethod::class, Function_::class, Closure::class];
+        return [ClassMethod::class, Function_::class, Closure::class, ArrowFunction::class];
     }
 
     /**
-     * @param ClassMethod|Function_|Closure $node
+     * @param ClassMethod|Function_|Closure|ArrowFunction $node
      */
-    public function refactor(Node $node): ClassMethod|Function_|Closure|null
+    public function refactor(Node $node): ClassMethod|Function_|Closure|ArrowFunction|null
     {
         if ($node->params === []) {
             return null;
