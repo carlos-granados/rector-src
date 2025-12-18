@@ -114,6 +114,11 @@ CODE_SAMPLE
             return true;
         }
 
+        // readonly classes cannot have dynamic properties
+        if ($class->isReadonly()) {
+            return true;
+        }
+
         $className = (string) $this->getName($class);
         if (! $this->reflectionProvider->hasClass($className)) {
             return true;
