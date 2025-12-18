@@ -194,6 +194,11 @@ CODE_SAMPLE
 
     private function shouldSkipClass(Class_ $class): bool
     {
+        // skip readonly classes - can't add properties dynamically
+        if ($class->isReadonly()) {
+            return true;
+        }
+
         // skip magic
         $getClassMethod = $class->getMethod('__get');
         if ($getClassMethod instanceof ClassMethod) {
