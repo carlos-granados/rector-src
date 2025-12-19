@@ -9,6 +9,7 @@ use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\ArrowFunction;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Expr\FuncCall;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Php74\NodeAnalyzer\ClosureArrowFunctionAnalyzer;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -20,6 +21,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 final class CallUserFuncWithArrowFunctionToInlineRector extends AbstractRector
 {
     public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer,
         private readonly ClosureArrowFunctionAnalyzer $closureArrowFunctionAnalyzer
     ) {
     }
@@ -73,6 +75,10 @@ CODE_SAMPLE
             return null;
         }
 
+        if ($this->argsAnalyzer->hasNamedArg($node->getArgs())) {
+            return null;
+        }
+
         if (count($node->args) !== 1) {
             return null;
         }
@@ -89,10 +95,20 @@ CODE_SAMPLE
 
         $firstArgValue = $firstArg->value;
         if ($firstArgValue instanceof ArrowFunction) {
+            // Skip if arrow function has parameters (would need args to call)
+            if ($firstArgValue->params !== []) {
+                return null;
+            }
+
             return $firstArgValue->expr;
         }
 
         if ($firstArgValue instanceof Closure) {
+            // Skip if closure has parameters (would need args to call)
+            if ($firstArgValue->params !== []) {
+                return null;
+            }
+
             return $this->closureArrowFunctionAnalyzer->matchArrowFunctionExpr($firstArgValue);
         }
 
