@@ -9,6 +9,7 @@ use PhpParser\Node\Arg;
 use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\FuncCall;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -18,6 +19,11 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class ArrayMergeOfNonArraysToSimpleArrayRector extends AbstractRector
 {
+    public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer
+    ) {
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -71,10 +77,29 @@ CODE_SAMPLE
             return null;
         }
 
-        $array = new Array_();
-        $isAssigned = false;
+        if ($this->argsAnalyzer->hasNamedArg($node->getArgs())) {
+            return null;
+        }
+
+        foreach ($node->args as $arg) {
+            if (! $arg instanceof Arg) {
+                return null;
+            }
+
+            if ($arg->unpack) {
+                return null;
+            }
+        }
+
         foreach ($node->args as $arg) {
             // found non Arg? return early
+            if (! $arg instanceof Arg) {
+                return null;
+            }
+        }
+
+        $array = new Array_();
+        foreach ($node->args as $arg) {
             if (! $arg instanceof Arg) {
                 return null;
             }
@@ -92,12 +117,7 @@ CODE_SAMPLE
                 $array->items[] = $nestedArrayItemItem->unpack
                     ? $nestedArrayItemItem
                     : new ArrayItem($nestedArrayItemItem->value, $nestedArrayItemItem->key);
-                $isAssigned = true;
             }
-        }
-
-        if (! $isAssigned) {
-            return null;
         }
 
         return $array;
