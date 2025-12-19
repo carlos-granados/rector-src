@@ -14,6 +14,7 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Return_;
+use PhpParser\Node\Stmt\Else_;
 use PhpParser\NodeFinder;
 use Rector\NodeManipulator\BinaryOpManipulator;
 use Rector\Php71\ValueObject\TwoNodeMatch;
@@ -158,6 +159,11 @@ CODE_SAMPLE
 
     private function shouldSkipForeach(Foreach_ $foreach): bool
     {
+        // Skip foreach with reference: foreach ($items as &$value)
+        if ($foreach->byRef) {
+            return true;
+        }
+
         if ($foreach->keyVar instanceof Expr) {
             return true;
         }
@@ -177,6 +183,16 @@ CODE_SAMPLE
 
     private function shouldSkipIf(If_ $if): bool
     {
+        // Skip if with else or elseif clauses
+        if ($if->elseifs !== [] || $if->else instanceof Else_) {
+            return true;
+        }
+
+        // Skip if with multiple statements
+        if (count($if->stmts) !== 1) {
+            return true;
+        }
+
         $ifCondition = $if->cond;
         if ($ifCondition instanceof Identical) {
             return false;
