@@ -91,6 +91,10 @@ CODE_SAMPLE
                 continue;
             }
 
+            if ($stmt->byRef) {
+                continue;
+            }
+
             if (! $stmt->keyVar instanceof Expr) {
                 continue;
             }
