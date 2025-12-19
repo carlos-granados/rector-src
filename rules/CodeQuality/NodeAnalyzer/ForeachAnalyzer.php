@@ -26,6 +26,16 @@ final readonly class ForeachAnalyzer
      */
     public function matchAssignItemsOnlyForeachArrayVariable(Foreach_ $foreach): ?Expr
     {
+        // Skip foreach with key: foreach ($items as $key => $value)
+        if ($foreach->keyVar instanceof Expr) {
+            return null;
+        }
+
+        // Skip foreach with reference: foreach ($items as &$value)
+        if ($foreach->byRef) {
+            return null;
+        }
+
         if (count($foreach->stmts) !== 1) {
             return null;
         }
