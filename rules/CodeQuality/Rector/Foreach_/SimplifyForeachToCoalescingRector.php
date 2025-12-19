@@ -77,6 +77,10 @@ CODE_SAMPLE
             }
 
             $foreach = $stmt;
+            if ($foreach->byRef) {
+                continue;
+            }
+
             if (! $foreach->keyVar instanceof Expr) {
                 continue;
             }
