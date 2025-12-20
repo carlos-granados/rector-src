@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rector\CodeQuality\Rector\FuncCall;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\FuncCall;
@@ -78,6 +79,22 @@ CODE_SAMPLE
             return null;
         }
 
+        // Skip if no arguments
+        if ($node->getArgs() === []) {
+            return null;
+        }
+
+        // Check for spread operator
+        foreach ($node->getArgs() as $arg) {
+            if (! $arg instanceof Arg) {
+                return null;
+            }
+
+            if ($arg->unpack) {
+                return null;
+            }
+        }
+
         if ($this->compactConverter->hasAllArgumentsNamed($node)) {
             return $this->compactConverter->convertToArray($node);
         }
@@ -87,6 +104,10 @@ CODE_SAMPLE
         }
 
         $firstArg = $node->getArgs()[0];
+
+        if (! $firstArg instanceof Arg) {
+            return null;
+        }
 
         $firstValue = $firstArg->value;
         $firstValueStaticType = $this->getType($firstValue);
