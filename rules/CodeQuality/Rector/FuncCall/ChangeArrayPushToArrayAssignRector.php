@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Rector\CodeQuality\Rector\FuncCall;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Expression;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -19,6 +21,11 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class ChangeArrayPushToArrayAssignRector extends AbstractRector
 {
+    public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer
+    ) {
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -66,6 +73,10 @@ CODE_SAMPLE
             return null;
         }
 
+        if ($this->argsAnalyzer->hasNamedArg($funcCall->getArgs())) {
+            return null;
+        }
+
         if ($this->hasArraySpread($funcCall)) {
             return null;
         }
@@ -76,6 +87,10 @@ CODE_SAMPLE
         }
 
         $firstArg = array_shift($args);
+        if (! $firstArg instanceof Arg) {
+            return null;
+        }
+
         if ($args === []) {
             return null;
         }
@@ -85,6 +100,10 @@ CODE_SAMPLE
         $newStmts = [];
 
         foreach ($args as $key => $arg) {
+            if (! $arg instanceof Arg) {
+                continue;
+            }
+
             $assign = new Assign($arrayDimFetch, $arg->value);
             $assignExpression = new Expression($assign);
             $newStmts[] = $assignExpression;
