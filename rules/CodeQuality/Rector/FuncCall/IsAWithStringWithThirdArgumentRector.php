@@ -7,6 +7,7 @@ namespace Rector\CodeQuality\Rector\FuncCall;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\FuncCall;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -16,6 +17,11 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class IsAWithStringWithThirdArgumentRector extends AbstractRector
 {
+    public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer
+    ) {
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -67,11 +73,34 @@ CODE_SAMPLE
             return null;
         }
 
-        if (isset($node->getArgs()[2])) {
+        $args = $node->getArgs();
+
+        // need at least 2 arguments
+        if (count($args) < 2) {
             return null;
         }
 
-        $firstArg = $node->getArgs()[0];
+        // skip named arguments
+        if ($this->argsAnalyzer->hasNamedArg($args)) {
+            return null;
+        }
+
+        // skip spread operator
+        foreach ($args as $arg) {
+            if (! $arg instanceof Arg) {
+                return null;
+            }
+
+            if ($arg->unpack) {
+                return null;
+            }
+        }
+
+        if (isset($args[2])) {
+            return null;
+        }
+
+        $firstArg = $args[0];
 
         $firstArgumentStaticType = $this->getType($firstArg->value);
         if (! $firstArgumentStaticType->isString()->yes()) {
