@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rector\CodeQuality\Rector\FuncCall;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\FuncCall;
@@ -14,6 +15,7 @@ use PhpParser\Node\Name\FullyQualified;
 use PHPStan\Type\Generic\GenericClassStringType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\ObjectWithoutClassType;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Rector\AbstractRector;
 use Rector\StaticTypeMapper\Resolver\ClassNameFromObjectTypeResolver;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -24,6 +26,11 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class InlineIsAInstanceOfRector extends AbstractRector
 {
+    public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer,
+    ) {
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition('Change `is_a()` with object and class name check to `instanceof`', [
@@ -73,6 +80,33 @@ CODE_SAMPLE
         }
 
         $args = $node->getArgs();
+
+        // is_a() requires at least 2 arguments
+        if (count($args) < 2) {
+            return null;
+        }
+
+        // Skip if third parameter is present (allow_string parameter)
+        if (count($args) >= 3) {
+            return null;
+        }
+
+        // Skip if named arguments are used
+        if ($this->argsAnalyzer->hasNamedArg($args)) {
+            return null;
+        }
+
+        // Check for spread operator
+        foreach ($args as $arg) {
+            if (! $arg instanceof Arg) {
+                return null;
+            }
+
+            if ($arg->unpack) {
+                return null;
+            }
+        }
+
         $firstArgValue = $args[0]->value;
 
         if (! $this->isFirstObjectType($firstArgValue)) {
