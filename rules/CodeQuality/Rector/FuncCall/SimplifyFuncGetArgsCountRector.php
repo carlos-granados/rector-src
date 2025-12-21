@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Rector\CodeQuality\Rector\FuncCall;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\FuncCall;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -15,6 +17,11 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class SimplifyFuncGetArgsCountRector extends AbstractRector
 {
+    public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer
+    ) {
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -44,7 +51,31 @@ final class SimplifyFuncGetArgsCountRector extends AbstractRector
             return null;
         }
 
-        $firstArg = $node->getArgs()[0];
+        $args = $node->getArgs();
+
+        if ($args === []) {
+            return null;
+        }
+
+        if (count($args) > 1) {
+            return null;
+        }
+
+        if ($this->argsAnalyzer->hasNamedArg($args)) {
+            return null;
+        }
+
+        foreach ($args as $arg) {
+            if (! $arg instanceof Arg) {
+                return null;
+            }
+
+            if ($arg->unpack) {
+                return null;
+            }
+        }
+
+        $firstArg = $args[0];
 
         if (! $firstArg->value instanceof FuncCall) {
             return null;
