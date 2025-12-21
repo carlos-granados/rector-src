@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rector\CodeQuality\Rector\FuncCall;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\Cast;
 use PhpParser\Node\Expr\Cast\Array_;
@@ -15,6 +16,7 @@ use PhpParser\Node\Expr\Cast\Object_;
 use PhpParser\Node\Expr\Cast\String_;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Stmt\Expression;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\PhpParser\Node\Value\ValueResolver;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -41,6 +43,7 @@ final class SetTypeToCastRector extends AbstractRector
     ];
 
     public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer,
         private readonly ValueResolver $valueResolver
     ) {
     }
@@ -113,11 +116,31 @@ CODE_SAMPLE
             return null;
         }
 
-        if (count($funcCall->getArgs()) < 2) {
+        $args = $funcCall->getArgs();
+
+        // skip named arguments
+        if ($this->argsAnalyzer->hasNamedArg($args)) {
             return null;
         }
 
-        $secondArg = $funcCall->getArgs()[1];
+        // skip spread operator
+        foreach ($args as $arg) {
+            if (! $arg instanceof Arg) {
+                return null;
+            }
+
+            if ($arg->unpack) {
+                return null;
+            }
+        }
+
+        // settype() requires exactly 2 arguments, verify they exist
+        if (! isset($args[0], $args[1])) {
+            return null;
+        }
+
+        $firstArg = $args[0];
+        $secondArg = $args[1];
 
         $typeValue = $this->valueResolver->getValue($secondArg->value);
         if (! is_string($typeValue)) {
@@ -126,7 +149,6 @@ CODE_SAMPLE
 
         $typeValue = strtolower($typeValue);
 
-        $firstArg = $funcCall->getArgs()[0];
         $variable = $firstArg->value;
 
         if (isset(self::TYPE_TO_CAST[$typeValue])) {
