@@ -7,6 +7,7 @@ namespace Rector\CodeQuality\Rector\FuncCall;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\FuncCall;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -16,6 +17,11 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class SimplifyInArrayValuesRector extends AbstractRector
 {
+    public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer
+    ) {
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -45,6 +51,22 @@ final class SimplifyInArrayValuesRector extends AbstractRector
             return null;
         }
 
+        $args = $node->getArgs();
+
+        if ($this->argsAnalyzer->hasNamedArg($args)) {
+            return null;
+        }
+
+        foreach ($args as $arg) {
+            if (! $arg instanceof Arg) {
+                return null;
+            }
+
+            if ($arg->unpack) {
+                return null;
+            }
+        }
+
         if (! isset($node->args[1])) {
             return null;
         }
@@ -63,11 +85,27 @@ final class SimplifyInArrayValuesRector extends AbstractRector
             return null;
         }
 
-        if (! isset($node->getArgs()[0])) {
+        $innerArgs = $innerFunCall->getArgs();
+
+        if ($innerArgs === []) {
             return null;
         }
 
-        $node->args[1] = $innerFunCall->getArgs()[0];
+        if ($this->argsAnalyzer->hasNamedArg($innerArgs)) {
+            return null;
+        }
+
+        foreach ($innerArgs as $innerArg) {
+            if (! $innerArg instanceof Arg) {
+                return null;
+            }
+
+            if ($innerArg->unpack) {
+                return null;
+            }
+        }
+
+        $node->args[1] = $innerArgs[0];
 
         return $node;
     }
