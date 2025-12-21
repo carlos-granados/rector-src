@@ -81,6 +81,8 @@ CODE_SAMPLE
             return null;
         }
 
+        $hasChanged = false;
+
         foreach (self::COMPLEX_PATTERN_TO_SIMPLE as $complexPattern => $simple) {
             $originalValue = $node->value;
             $simplifiedValue = Strings::replace(
@@ -102,6 +104,10 @@ CODE_SAMPLE
             }
 
             $node->value = $simplifiedValue;
+            $hasChanged = true;
+        }
+
+        if ($hasChanged) {
             return $node;
         }
 
