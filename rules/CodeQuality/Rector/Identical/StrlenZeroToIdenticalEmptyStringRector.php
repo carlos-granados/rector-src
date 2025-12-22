@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rector\CodeQuality\Rector\Identical;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp\Greater;
 use PhpParser\Node\Expr\BinaryOp\Identical;
@@ -12,6 +13,7 @@ use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\BinaryOp\Smaller;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Scalar\String_;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\PhpParser\Node\Value\ValueResolver;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -23,6 +25,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 final class StrlenZeroToIdenticalEmptyStringRector extends AbstractRector
 {
     public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer,
         private readonly ValueResolver $valueResolver
     ) {
     }
@@ -62,11 +65,11 @@ CODE_SAMPLE
      */
     public function getNodeTypes(): array
     {
-        return [Greater::class, Smaller::class, Identical::class];
+        return [Greater::class, Smaller::class, Identical::class, NotIdentical::class];
     }
 
     /**
-     * @param Greater|Smaller|Identical $node
+     * @param Greater|Smaller|Identical|NotIdentical $node
      */
     public function refactor(Node $node): ?Node
     {
@@ -88,6 +91,29 @@ CODE_SAMPLE
             return null;
         }
 
+        $args = $funcCall->getArgs();
+
+        // strlen() requires exactly 1 argument
+        if (count($args) !== 1) {
+            return null;
+        }
+
+        // Check for named arguments
+        if ($this->argsAnalyzer->hasNamedArg($args)) {
+            return null;
+        }
+
+        // Check if first arg is an Arg instance
+        $firstArg = $args[0];
+        if (! $firstArg instanceof Arg) {
+            return null;
+        }
+
+        // Check for spread operator
+        if ($firstArg->unpack) {
+            return null;
+        }
+
         if (! $this->valueResolver->isValue($expr, 0)) {
             return null;
         }
@@ -99,8 +125,7 @@ CODE_SAMPLE
             return null;
         }
 
-        $variable = $funcCall->getArgs()[0]
-            ->value;
+        $variable = $firstArg->value;
 
         // Needs string cast if variable type is not string
         // see https://github.com/rectorphp/rector/issues/6700
