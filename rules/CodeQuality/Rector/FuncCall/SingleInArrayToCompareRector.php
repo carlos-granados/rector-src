@@ -132,10 +132,6 @@ CODE_SAMPLE
             return null;
         }
 
-        if (! $args[1] instanceof Arg) {
-            return null;
-        }
-
         if (! $args[1]->value instanceof Array_) {
             return null;
         }
@@ -152,10 +148,6 @@ CODE_SAMPLE
         }
 
         if ($firstArrayItem->unpack) {
-            return null;
-        }
-
-        if (! $args[0] instanceof Arg) {
             return null;
         }
 
