@@ -10,6 +10,7 @@ use PhpParser\Node\Expr\BinaryOp\Identical;
 use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\BooleanNot;
 use PhpParser\Node\Expr\FuncCall;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\NodeManipulator\BinaryOpManipulator;
 use Rector\Php71\ValueObject\TwoNodeMatch;
 use Rector\PhpParser\Node\Value\ValueResolver;
@@ -23,6 +24,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 final class SimplifyArraySearchRector extends AbstractRector
 {
     public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer,
         private readonly BinaryOpManipulator $binaryOpManipulator,
         private readonly ValueResolver $valueResolver
     ) {
@@ -74,7 +76,18 @@ final class SimplifyArraySearchRector extends AbstractRector
         /** @var FuncCall $funcCallExpr */
         $funcCallExpr = $twoNodeMatch->getFirstExpr();
 
-        $inArrayFuncCall = $this->nodeFactory->createFuncCall('in_array', $funcCallExpr->args);
+        // Skip if named arguments or spread operator is used
+        if ($this->argsAnalyzer->hasNamedArg($funcCallExpr->getArgs())) {
+            return null;
+        }
+
+        foreach ($funcCallExpr->getArgs() as $arg) {
+            if ($arg->unpack) {
+                return null;
+            }
+        }
+
+        $inArrayFuncCall = $this->nodeFactory->createFuncCall('in_array', $funcCallExpr->getArgs());
 
         if ($node instanceof Identical) {
             return new BooleanNot($inArrayFuncCall);
