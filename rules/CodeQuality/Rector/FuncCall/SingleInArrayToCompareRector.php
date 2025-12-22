@@ -14,6 +14,8 @@ use PhpParser\Node\Expr\BinaryOp\NotEqual;
 use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\BooleanNot;
 use PhpParser\Node\Expr\FuncCall;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
+use Rector\PhpParser\Node\Value\ValueResolver;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -23,6 +25,12 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class SingleInArrayToCompareRector extends AbstractRector
 {
+    public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer,
+        private readonly ValueResolver $valueResolver
+    ) {
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -101,20 +109,39 @@ CODE_SAMPLE
             return null;
         }
 
-        if (! isset($funcCall->args[1])) {
+        $args = $funcCall->getArgs();
+
+        // Check for named arguments
+        if ($this->argsAnalyzer->hasNamedArg($args)) {
             return null;
         }
 
-        if (! $funcCall->args[1] instanceof Arg) {
+        // Check for spread operator in function arguments
+        foreach ($args as $arg) {
+            if (! $arg instanceof Arg) {
+                return null;
+            }
+
+            if ($arg->unpack) {
+                return null;
+            }
+        }
+
+        // Need at least 2 arguments (needle, haystack)
+        if (count($args) < 2) {
             return null;
         }
 
-        if (! $funcCall->args[1]->value instanceof Array_) {
+        if (! $args[1] instanceof Arg) {
+            return null;
+        }
+
+        if (! $args[1]->value instanceof Array_) {
             return null;
         }
 
         /** @var Array_ $arrayNode */
-        $arrayNode = $funcCall->args[1]->value;
+        $arrayNode = $args[1]->value;
         if (count($arrayNode->items) !== 1) {
             return null;
         }
@@ -128,7 +155,7 @@ CODE_SAMPLE
             return null;
         }
 
-        if (! isset($funcCall->getArgs()[0])) {
+        if (! $args[0] instanceof Arg) {
             return null;
         }
 
@@ -139,10 +166,17 @@ CODE_SAMPLE
     {
         $firstArrayItemValue = $firstArrayItem->value;
 
-        $firstArg = $funcCall->getArgs()[0];
+        $args = $funcCall->getArgs();
 
-        // strict
-        if (isset($funcCall->getArgs()[2])) {
+        // Type safety: first arg must be Arg instance
+        if (! $args[0] instanceof Arg) {
+            return $funcCall;
+        }
+
+        $firstArg = $args[0];
+
+        // Check if third parameter exists and is true (strict comparison)
+        if (isset($args[2]) && $args[2] instanceof Arg && $this->valueResolver->isTrue($args[2]->value)) {
             return $isNegated
                 ? new NotIdentical($firstArg->value, $firstArrayItemValue)
                 : new Identical($firstArg->value, $firstArrayItemValue);
