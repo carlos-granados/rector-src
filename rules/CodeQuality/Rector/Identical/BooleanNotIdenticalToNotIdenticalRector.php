@@ -93,7 +93,7 @@ CODE_SAMPLE
         return null;
     }
 
-    private function processIdentical(Identical $identical): ?NotIdentical
+    private function processIdentical(Identical $identical): Identical|NotIdentical|null
     {
         $leftType = $this->getType($identical->left);
         if (! $leftType->isBoolean()->yes()) {
@@ -105,8 +105,17 @@ CODE_SAMPLE
             return null;
         }
 
+        // Handle both sides with BooleanNot: ! $a === ! $b becomes $a === $b (double negation)
+        if ($identical->left instanceof BooleanNot && $identical->right instanceof BooleanNot) {
+            return new Identical($identical->left->expr, $identical->right->expr);
+        }
+
         if ($identical->left instanceof BooleanNot) {
             return new NotIdentical($identical->left->expr, $identical->right);
+        }
+
+        if ($identical->right instanceof BooleanNot) {
+            return new NotIdentical($identical->left, $identical->right->expr);
         }
 
         return null;
