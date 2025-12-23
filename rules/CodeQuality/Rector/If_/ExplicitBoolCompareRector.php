@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rector\CodeQuality\Rector\If_;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\Assign;
@@ -30,6 +31,7 @@ use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\If_;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\ObjectType;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\NodeTypeResolver\TypeAnalyzer\ArrayTypeAnalyzer;
 use Rector\NodeTypeResolver\TypeAnalyzer\StringTypeAnalyzer;
 use Rector\PhpParser\Node\Value\ValueResolver;
@@ -46,6 +48,7 @@ final class ExplicitBoolCompareRector extends AbstractRector
         private readonly StringTypeAnalyzer $stringTypeAnalyzer,
         private readonly ArrayTypeAnalyzer $arrayTypeAnalyzer,
         private readonly ValueResolver $valueResolver,
+        private readonly ArgsAnalyzer $argsAnalyzer,
     ) {
     }
 
@@ -173,7 +176,35 @@ CODE_SAMPLE
             return null;
         }
 
-        $countedType = $this->getType($funcCall->getArgs()[0]->value);
+        $args = $funcCall->getArgs();
+
+        // count() requires exactly 1 argument (2nd is optional but we skip it for simplicity)
+        if ($args === []) {
+            return null;
+        }
+
+        // Skip named arguments
+        if ($this->argsAnalyzer->hasNamedArg($args)) {
+            return null;
+        }
+
+        // Skip spread operator
+        foreach ($args as $arg) {
+            if (! $arg instanceof Arg) {
+                return null;
+            }
+
+            if ($arg->unpack) {
+                return null;
+            }
+        }
+
+        // Skip if count() has more than 1 argument (e.g., COUNT_RECURSIVE)
+        if (count($args) > 1) {
+            return null;
+        }
+
+        $countedType = $this->getType($args[0]->value);
 
         if ($countedType->isArray()->yes()) {
             return null;

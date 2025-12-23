@@ -92,10 +92,12 @@ CODE_SAMPLE
             if (! $stmt instanceof If_) {
                 continue;
             }
+
             // Skip ifs with else or elseif - they change the logic
             if ($stmt->else instanceof Else_) {
                 continue;
             }
+
             if ($stmt->elseifs !== []) {
                 continue;
             }
