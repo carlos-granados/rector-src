@@ -9,6 +9,7 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp\Coalesce;
 use PhpParser\Node\Expr\Throw_;
 use PhpParser\Node\Stmt;
+use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Return_;
@@ -89,6 +90,13 @@ CODE_SAMPLE
 
         foreach ($node->stmts as $key => $stmt) {
             if (! $stmt instanceof If_) {
+                continue;
+            }
+            // Skip ifs with else or elseif - they change the logic
+            if ($stmt->else instanceof Else_) {
+                continue;
+            }
+            if ($stmt->elseifs !== []) {
                 continue;
             }
 
