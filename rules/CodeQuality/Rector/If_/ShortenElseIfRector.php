@@ -101,7 +101,7 @@ CODE_SAMPLE
             $nop->setAttribute(AttributeKey::COMMENTS, $if->getComments());
             $if->stmts[] = $nop;
         } else {
-            $currentStmt = current($if->stmts);
+            $currentStmt = $if->stmts[0];
             $mergedComments = array_merge($if->getComments(), $currentStmt->getComments());
             $currentStmt->setAttribute(AttributeKey::COMMENTS, $mergedComments);
         }
