@@ -6,8 +6,11 @@ namespace Rector\CodeQuality\Rector\Switch_;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Exit_;
+use PhpParser\Node\Expr\Throw_;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Case_;
+use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Return_;
 use PhpParser\Node\Stmt\Switch_;
@@ -94,7 +97,13 @@ CODE_SAMPLE
         $defaultCase = null;
 
         foreach ($node->cases as $case) {
-            if (! end($case->stmts) instanceof Return_) {
+            // skip empty cases
+            if ($case->stmts === []) {
+                return null;
+            }
+
+            $lastStmt = end($case->stmts);
+            if (! $this->isTerminalStatement($lastStmt)) {
                 return null;
             }
 
@@ -118,5 +127,19 @@ CODE_SAMPLE
         }
 
         return $newStmts;
+    }
+
+    private function isTerminalStatement(Stmt $stmt): bool
+    {
+        if ($stmt instanceof Return_) {
+            return true;
+        }
+
+        // Throw_ and Exit_ are expressions, so they need to be wrapped in Expression
+        if ($stmt instanceof Expression) {
+            return $stmt->expr instanceof Throw_ || $stmt->expr instanceof Exit_;
+        }
+
+        return false;
     }
 }
