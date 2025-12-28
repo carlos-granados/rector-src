@@ -103,7 +103,9 @@ CODE_SAMPLE
 
         foreach ($isset->vars as $issetExpr) {
             if (! $issetExpr instanceof PropertyFetch) {
-                continue;
+                // If isset contains non-property expressions, skip transformation entirely
+                // because we cannot safely transform mixed isset expressions
+                return null;
             }
 
             // has property PHP 7.4 type?
