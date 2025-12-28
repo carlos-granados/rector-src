@@ -66,17 +66,44 @@ CODE_SAMPLE
         }
 
         $logicalAnd = $node->expr;
-        if (! $logicalAnd->left instanceof Assign) {
+
+        $expressions = $this->collectAssignExpressions($logicalAnd);
+
+        // Only transform if we have at least 2 assigns
+        if (count($expressions) < 2) {
             return null;
         }
 
-        if (! $logicalAnd->right instanceof Assign) {
-            return null;
+        return $expressions;
+    }
+
+    /**
+     * @return Expression[]
+     */
+    private function collectAssignExpressions(LogicalAnd $logicalAnd): array
+    {
+        $expressions = [];
+
+        // Process left side
+        if ($logicalAnd->left instanceof LogicalAnd) {
+            $expressions = array_merge($expressions, $this->collectAssignExpressions($logicalAnd->left));
+        } elseif ($logicalAnd->left instanceof Assign) {
+            $expressions[] = new Expression($logicalAnd->left);
+        } else {
+            // Left side is not an Assign or LogicalAnd, cannot transform
+            return [];
         }
 
-        $leftAssignExpression = new Expression($logicalAnd->left);
-        $rightAssignExpression = new Expression($logicalAnd->right);
+        // Process right side
+        if ($logicalAnd->right instanceof LogicalAnd) {
+            $expressions = array_merge($expressions, $this->collectAssignExpressions($logicalAnd->right));
+        } elseif ($logicalAnd->right instanceof Assign) {
+            $expressions[] = new Expression($logicalAnd->right);
+        } else {
+            // Right side is not an Assign or LogicalAnd, cannot transform
+            return [];
+        }
 
-        return [$leftAssignExpression, $rightAssignExpression];
+        return $expressions;
     }
 }
