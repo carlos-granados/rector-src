@@ -85,6 +85,11 @@ CODE_SAMPLE
 
         $onlyCase = $node->cases[0];
 
+        // skip empty cases (no statements)
+        if ($onlyCase->stmts === []) {
+            return null;
+        }
+
         // only default → basically unwrap
         if (! $onlyCase->cond instanceof Expr) {
             // remove default clause because it cause syntax error
