@@ -79,12 +79,13 @@ CODE_SAMPLE
      */
     public function refactor(Node $node): ?Node
     {
-        if ($node->expr instanceof Concat && $node->expr->left instanceof String_ && $this->isRefactorableStringPath(
-            $node->expr->left
-        )) {
-            $node->expr->left = $this->prefixWithDirConstant($node->expr->left);
-
-            return $node;
+        if ($node->expr instanceof Concat) {
+            $leftmostString = $this->findLeftmostString($node->expr);
+            if ($leftmostString instanceof String_ && $this->isRefactorableStringPath($leftmostString)) {
+                // Replace the leftmost string with __DIR__ prefixed version
+                $this->replaceLeftmostString($node->expr, $this->prefixWithDirConstant($leftmostString));
+                return $node;
+            }
         }
 
         if (! $node->expr instanceof String_) {
@@ -95,8 +96,12 @@ CODE_SAMPLE
             return null;
         }
 
-        /** @var string $includeValue */
         $includeValue = $this->valueResolver->getValue($node->expr);
+
+        // ensure value is a string
+        if (! is_string($includeValue)) {
+            return null;
+        }
 
         // skip phar
         if (\str_starts_with($includeValue, 'phar://')) {
@@ -159,5 +164,31 @@ CODE_SAMPLE
         }
 
         $string->value = '/' . $string->value;
+    }
+
+    /**
+     * Find the leftmost String_ node in a Concat expression tree
+     */
+    private function findLeftmostString(Concat $concat): Node
+    {
+        $current = $concat;
+        while ($current->left instanceof Concat) {
+            $current = $current->left;
+        }
+
+        return $current->left;
+    }
+
+    /**
+     * Replace the leftmost node in a Concat expression tree
+     */
+    private function replaceLeftmostString(Concat $concat, Concat $replacement): void
+    {
+        $current = $concat;
+        while ($current->left instanceof Concat) {
+            $current = $current->left;
+        }
+
+        $current->left = $replacement;
     }
 }
