@@ -25,7 +25,7 @@ class UsingThisInInstanceMethod
 {
     public function test(): callable
     {
-        return $this->values(...);
+        return fn () => $this->values();
     }
 
     public function values(): array

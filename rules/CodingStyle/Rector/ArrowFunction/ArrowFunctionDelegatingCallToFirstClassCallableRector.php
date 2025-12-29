@@ -57,6 +57,11 @@ CODE_SAMPLE
      */
     public function refactor(Node $node): null|CallLike
     {
+        // Skip if arrow function has no parameters - not equivalent to first class callable
+        if ($node->getParams() === []) {
+            return null;
+        }
+
         if (! $node->expr instanceof FuncCall && ! $node->expr instanceof MethodCall && ! $node->expr instanceof StaticCall) {
             return null;
         }
