@@ -73,6 +73,11 @@ CODE_SAMPLE
             return null;
         }
 
+        // Short ternary syntax not supported
+        if ($node->if === null) {
+            return null;
+        }
+
         if (! $node->if instanceof ArrayDimFetch) {
             return null;
         }
