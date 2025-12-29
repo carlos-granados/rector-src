@@ -61,6 +61,11 @@ CODE_SAMPLE
      */
     public function refactor(Node $node): ?Node
     {
+        // Skip short ternary syntax ($a ?: $b) where if part is null
+        if ($node->if === null) {
+            return null;
+        }
+
         if (! $node->cond instanceof BinaryOp) {
             return null;
         }
