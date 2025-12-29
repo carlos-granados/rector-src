@@ -11,6 +11,7 @@ use PhpParser\Node\Expr\BinaryOp\Identical;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\Ternary;
 use PhpParser\Node\Scalar\String_;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -20,6 +21,11 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class TernaryImplodeToImplodeRector extends AbstractRector
 {
+    public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer
+    ) {
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -76,6 +82,11 @@ CODE_SAMPLE
             return null;
         }
 
+        // Short ternary syntax not supported
+        if ($node->if === null) {
+            return null;
+        }
+
         if (! $node->if instanceof String_) {
             return null;
         }
@@ -97,9 +108,20 @@ CODE_SAMPLE
         }
 
         $function = $node->else;
+
+        // Check for named arguments
+        if ($this->argsAnalyzer->hasNamedArg($function->getArgs())) {
+            return null;
+        }
+
         $secondArg = $function->getArgs()[1] ?? null;
 
         if (! $secondArg instanceof Arg) {
+            return null;
+        }
+
+        // Check for spread operator in second argument
+        if ($secondArg->unpack) {
             return null;
         }
 
