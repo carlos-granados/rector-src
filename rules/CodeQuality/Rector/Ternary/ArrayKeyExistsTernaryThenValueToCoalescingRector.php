@@ -10,6 +10,7 @@ use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\BinaryOp\Coalesce;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\Ternary;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\PhpParser\Node\Value\ValueResolver;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -21,7 +22,8 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 final class ArrayKeyExistsTernaryThenValueToCoalescingRector extends AbstractRector
 {
     public function __construct(
-        private readonly ValueResolver $valueResolver
+        private readonly ValueResolver $valueResolver,
+        private readonly ArgsAnalyzer $argsAnalyzer
     ) {
     }
 
@@ -100,15 +102,31 @@ CODE_SAMPLE
      */
     private function areArrayKeysExistsArgsMatchingDimFetch(FuncCall $funcCall, ArrayDimFetch $arrayDimFetch): bool
     {
-        $firstArg = $funcCall->args[0];
+        // check for named arguments
+        $args = $funcCall->getArgs();
+        if ($this->argsAnalyzer->hasNamedArg($args)) {
+            return false;
+        }
+
+        $firstArg = $args[0];
         if (! $firstArg instanceof Arg) {
+            return false;
+        }
+
+        // check for spread operator
+        if ($firstArg->unpack) {
             return false;
         }
 
         $keyExpr = $firstArg->value;
 
-        $secondArg = $funcCall->args[1];
+        $secondArg = $args[1];
         if (! $secondArg instanceof Arg) {
+            return false;
+        }
+
+        // check for spread operator
+        if ($secondArg->unpack) {
             return false;
         }
 
