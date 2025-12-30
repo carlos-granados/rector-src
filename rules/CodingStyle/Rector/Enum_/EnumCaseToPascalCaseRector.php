@@ -206,13 +206,34 @@ final class EnumCaseToPascalCaseRector extends AbstractRector
             '',
             array_map(
                 fn ($part): string =>
-                // If part is all uppercase, convert to ucfirst(strtolower())
-                // If part is already mixed or PascalCase, keep as is except ucfirst
-                ctype_upper($part)
+                // If part has only uppercase letters (or is empty), convert to ucfirst(strtolower())
+                // Otherwise, if it contains lowercase or mixed case, apply ucfirst only
+                $this->isAllUppercaseLetters($part)
                     ? ucfirst(strtolower($part))
                     : ucfirst($part),
                 $parts
             )
         );
+    }
+
+    private function isAllUppercaseLetters(string $part): bool
+    {
+        // Check if all alphabetic characters are uppercase
+        // This returns true for strings like "STATUS", "STATE3", "A", "B2C"
+        // Returns false for strings with any lowercase letters like "status", "State", "camelCase"
+        if ($part === '') {
+            return false;
+        }
+
+        // Remove all non-alphabetic characters to check case
+        $lettersOnly = preg_replace('/[^a-zA-Z]/', '', $part);
+
+        // If no letters remain, treat as not all uppercase (e.g., "123")
+        if ($lettersOnly === '') {
+            return false;
+        }
+
+        // Check if all remaining letters are uppercase
+        return ctype_upper((string) $lettersOnly);
     }
 }
