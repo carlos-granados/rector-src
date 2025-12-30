@@ -12,6 +12,7 @@ use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\Ternary;
 use PhpParser\Node\Expr\Variable;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Php\PhpVersionProvider;
 use Rector\Rector\AbstractRector;
 use Rector\ValueObject\PhpVersionFeature;
@@ -26,6 +27,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 final class ArraySpreadInsteadOfArrayMergeRector extends AbstractRector implements MinPhpVersionInterface
 {
     public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer,
         private readonly PhpVersionProvider $phpVersionProvider,
     ) {
     }
@@ -97,6 +99,15 @@ CODE_SAMPLE
     private function refactorArray(FuncCall $funcCall): ?Array_
     {
         if ($funcCall->isFirstClassCallable()) {
+            return null;
+        }
+
+        // Skip if no arguments or if using named arguments
+        if ($funcCall->args === []) {
+            return null;
+        }
+
+        if ($this->argsAnalyzer->hasNamedArg($funcCall->getArgs())) {
             return null;
         }
 
