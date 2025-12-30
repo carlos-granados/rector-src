@@ -101,8 +101,10 @@ CODE_SAMPLE
                 continue;
             }
 
-            /** @var string $methodName */
             $methodName = $this->getName($classMethod->name);
+            if ($methodName === null) {
+                continue;
+            }
 
             if ($classMethod->isPublic()) {
                 foreach ($interfaces as $interface) {
