@@ -207,6 +207,10 @@ CODE_SAMPLE
             return false;
         }
 
+        if ($key === 0) {
+            return false;
+        }
+
         $previousNode = $node->stmts[$key - 1];
         $currentNode = $node->stmts[$key];
 
