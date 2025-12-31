@@ -12,6 +12,7 @@ use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Scalar\String_;
 use Rector\CodingStyle\NodeFactory\ArrayCallableToMethodCallFactory;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\PhpParser\Node\Value\ValueResolver;
 use Rector\Rector\AbstractRector;
 use Rector\ValueObject\PhpVersionFeature;
@@ -26,6 +27,7 @@ final class CallUserFuncArrayToVariadicRector extends AbstractRector implements 
 {
     public function __construct(
         private readonly ArrayCallableToMethodCallFactory $arrayCallableToMethodCallFactory,
+        private readonly ArgsAnalyzer $argsAnalyzer,
         private readonly ValueResolver $valueResolver,
     ) {
     }
@@ -75,6 +77,11 @@ CODE_SAMPLE
         }
 
         if ($node->isFirstClassCallable()) {
+            return null;
+        }
+
+        // Skip if using named arguments
+        if ($this->argsAnalyzer->hasNamedArg($node->getArgs())) {
             return null;
         }
 
