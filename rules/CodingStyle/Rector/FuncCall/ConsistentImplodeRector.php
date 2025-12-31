@@ -8,6 +8,7 @@ use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Scalar\String_;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\NodeTypeResolver\TypeAnalyzer\StringTypeAnalyzer;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -19,6 +20,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 final class ConsistentImplodeRector extends AbstractRector
 {
     public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer,
         private readonly StringTypeAnalyzer $stringTypeAnalyzer,
     ) {
     }
@@ -73,6 +75,11 @@ CODE_SAMPLE
         }
 
         if ($node->isFirstClassCallable()) {
+            return null;
+        }
+
+        // Skip if using named arguments
+        if ($this->argsAnalyzer->hasNamedArg($node->getArgs())) {
             return null;
         }
 
