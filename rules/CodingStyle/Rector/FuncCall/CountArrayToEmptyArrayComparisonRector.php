@@ -16,6 +16,7 @@ use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Stmt\ElseIf_;
 use PhpParser\Node\Stmt\If_;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -25,6 +26,11 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class CountArrayToEmptyArrayComparisonRector extends AbstractRector
 {
+    public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer,
+    ) {
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -196,7 +202,22 @@ CODE_SAMPLE
             return null;
         }
 
-        $firstArg = $expr->getArgs()[0];
+        // Skip if no arguments or using named arguments
+        $args = $expr->getArgs();
+        if ($args === []) {
+            return null;
+        }
+
+        if ($this->argsAnalyzer->hasNamedArg($args)) {
+            return null;
+        }
+
+        // Skip if count has more than 1 argument (e.g., mode parameter)
+        if (count($args) > 1) {
+            return null;
+        }
+
+        $firstArg = $args[0];
 
         if (! $this->isArray($firstArg->value)) {
             return null;
