@@ -9,6 +9,7 @@ use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use Rector\CodingStyle\NodeFactory\ArrayCallableToMethodCallFactory;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -19,7 +20,8 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 final class CallUserFuncToMethodCallRector extends AbstractRector
 {
     public function __construct(
-        private readonly ArrayCallableToMethodCallFactory $arrayCallableToMethodCallFactory
+        private readonly ArrayCallableToMethodCallFactory $arrayCallableToMethodCallFactory,
+        private readonly ArgsAnalyzer $argsAnalyzer,
     ) {
     }
 
@@ -69,6 +71,11 @@ CODE_SAMPLE
         }
 
         if ($node->isFirstClassCallable()) {
+            return null;
+        }
+
+        // Skip if using named arguments
+        if ($this->argsAnalyzer->hasNamedArg($node->getArgs())) {
             return null;
         }
 
