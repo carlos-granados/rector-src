@@ -18,6 +18,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\VariadicPlaceholder;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Rector\AbstractRector;
 use Rector\ValueObject\PhpVersionFeature;
 use Rector\VersionBonding\Contract\MinPhpVersionInterface;
@@ -29,6 +30,11 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class ClosureFromCallableToFirstClassCallableRector extends AbstractRector implements MinPhpVersionInterface
 {
+    public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer,
+    ) {
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -135,6 +141,11 @@ final class ClosureFromCallableToFirstClassCallableRector extends AbstractRector
         }
 
         if ($staticCall->isFirstClassCallable()) {
+            return true;
+        }
+
+        // Skip if using named arguments
+        if ($this->argsAnalyzer->hasNamedArg($staticCall->getArgs())) {
             return true;
         }
 
