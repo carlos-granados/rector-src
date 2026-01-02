@@ -18,6 +18,7 @@ use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Rector\AbstractRector;
 use Rector\Util\PhpVersionFactory;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -47,6 +48,11 @@ final class VersionCompareFuncCallToConstantRector extends AbstractRector
         '<=' => SmallerOrEqual::class,
         'le' => SmallerOrEqual::class,
     ];
+
+    public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer,
+    ) {
+    }
 
     public function getRuleDefinition(): RuleDefinition
     {
@@ -104,6 +110,12 @@ CODE_SAMPLE
         }
 
         $args = $node->getArgs();
+
+        // Skip if using named arguments
+        if ($this->argsAnalyzer->hasNamedArg($args)) {
+            return null;
+        }
+
         if (! $this->isPhpVersionConstant($args[0]->value) && ! $this->isPhpVersionConstant($args[1]->value)) {
             return null;
         }
@@ -119,8 +131,19 @@ CODE_SAMPLE
             return null;
         }
 
+        // Ensure operator is a String_ node
+        if (! $args[2]->value instanceof String_) {
+            return null;
+        }
+
         /** @var String_ $operator */
         $operator = $args[2]->value;
+
+        // Check if operator is valid
+        if (! isset(self::OPERATOR_TO_COMPARISON[$operator->value])) {
+            return null;
+        }
+
         $comparisonClass = self::OPERATOR_TO_COMPARISON[$operator->value];
 
         return new $comparisonClass($left, $right);
