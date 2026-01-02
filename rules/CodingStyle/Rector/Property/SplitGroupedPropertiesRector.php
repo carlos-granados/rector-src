@@ -77,7 +77,14 @@ CODE_SAMPLE
         $nextProperties = [];
 
         foreach ($allProperties as $allProperty) {
-            $nextProperties[] = new Property($node->flags, [$allProperty], $node->getAttributes());
+            $nextProperties[] = new Property(
+                $node->flags,
+                [$allProperty],
+                $node->getAttributes(),
+                $node->type,
+                $node->attrGroups,
+                $node->hooks
+            );
         }
 
         return [$node, ...$nextProperties];
