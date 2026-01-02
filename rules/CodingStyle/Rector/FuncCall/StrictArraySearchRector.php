@@ -6,6 +6,7 @@ namespace Rector\CodingStyle\Rector\FuncCall;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\FuncCall;
+use Rector\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -15,6 +16,11 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class StrictArraySearchRector extends AbstractRector
 {
+    public function __construct(
+        private readonly ArgsAnalyzer $argsAnalyzer,
+    ) {
+    }
+
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -40,7 +46,18 @@ final class StrictArraySearchRector extends AbstractRector
             return null;
         }
 
-        if (count($node->args) === 2) {
+        if ($node->isFirstClassCallable()) {
+            return null;
+        }
+
+        $args = $node->getArgs();
+
+        // Skip if using named arguments - would need to add strict as named arg
+        if ($this->argsAnalyzer->hasNamedArg($args)) {
+            return null;
+        }
+
+        if (count($args) === 2) {
             $node->args[2] = $this->nodeFactory->createArg($this->nodeFactory->createTrue());
             return $node;
         }
