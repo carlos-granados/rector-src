@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Rector\DeadCode\Rector\Assign;
 
-use PhpParser\Node\Expr;
 use PhpParser\Node;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\PropertyFetch;
@@ -91,7 +91,7 @@ CODE_SAMPLE
             }
 
             // skip array append syntax like $arr[] = value, as each creates new element
-            if ($nextAssign->var instanceof ArrayDimFetch && !$nextAssign->var->dim instanceof Expr) {
+            if ($nextAssign->var instanceof ArrayDimFetch && ! $nextAssign->var->dim instanceof Expr) {
                 continue;
             }
 
