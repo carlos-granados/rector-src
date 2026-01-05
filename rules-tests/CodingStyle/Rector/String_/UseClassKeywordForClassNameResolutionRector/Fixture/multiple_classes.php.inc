@@ -6,7 +6,6 @@ class MultipleClasses
 {
     public function run()
     {
-        // Multiple class references in one string
         return 'Check: Rector\\Tests\\CodingStyle\\Rector\\String_\\UseClassKeywordForClassNameResolutionRector\\Fixture\\MultipleClasses::foo() and Rector\\Tests\\CodingStyle\\Rector\\String_\\UseClassKeywordForClassNameResolutionRector\\Fixture\\Fixture::bar()';
     }
 }
@@ -21,8 +20,7 @@ class MultipleClasses
 {
     public function run()
     {
-        // Multiple class references in one string
-        return 'Check: ' . \Rector\Tests\CodingStyle\Rector\String_\UseClassKeywordForClassNameResolutionRector\Fixture\MultipleClasses::class . '::foo() and ' . \Rector\Tests\CodingStyle\Rector\String_\UseClassKeywordForClassNameResolutionRector\Fixture\Fixture::class . '::bar()';
+        return 'Check: ' . \Rector\Tests\CodingStyle\Rector\String_\UseClassKeywordForClassNameResolutionRector\Fixture\MultipleClasses::class . '::foo() and Rector\Tests\CodingStyle\Rector\String_\UseClassKeywordForClassNameResolutionRector\Fixture\Fixture::bar()';
     }
 }
 
