@@ -10,6 +10,7 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\TraitUse;
 use PhpParser\Node\Stmt\TraitUseAdaptation\Alias;
+use PhpParser\Node\Stmt\TraitUseAdaptation\Precedence;
 use PhpParser\Node\Stmt\Use_;
 use Rector\PhpParser\Node\CustomNode\FileWithoutNamespace;
 use Rector\Rector\AbstractRector;
@@ -107,7 +108,7 @@ CODE_SAMPLE
 
         $uses = [];
         foreach ($use->uses as $singleUse) {
-            $uses[] = new Use_([$singleUse]);
+            $uses[] = new Use_([$singleUse], $use->type);
         }
 
         return $uses;
@@ -127,10 +128,16 @@ CODE_SAMPLE
             $adaptation = [];
 
             foreach ($traitUse->adaptations as $traitAdaptation) {
-                if ($traitAdaptation instanceof Alias
-                    && $traitAdaptation->trait instanceof Name
-                    && $traitAdaptation->trait->toString() === $singleTraitUse->toString()) {
-                    $adaptation[] = $traitAdaptation;
+                if ($traitAdaptation instanceof Alias) {
+                    if ($traitAdaptation->trait instanceof Name
+                        && $traitAdaptation->trait->toString() === $singleTraitUse->toString()) {
+                        $adaptation[] = $traitAdaptation;
+                    }
+                } elseif ($traitAdaptation instanceof Precedence) {
+                    if ($traitAdaptation->trait instanceof Name
+                        && $traitAdaptation->trait->toString() === $singleTraitUse->toString()) {
+                        $adaptation[] = $traitAdaptation;
+                    }
                 }
             }
 
