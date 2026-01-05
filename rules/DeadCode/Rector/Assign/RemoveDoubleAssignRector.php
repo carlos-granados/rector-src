@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Rector\DeadCode\Rector\Assign;
 
+use PhpParser\Node\Expr;
 use PhpParser\Node;
+use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\StaticPropertyFetch;
@@ -88,6 +90,11 @@ CODE_SAMPLE
                 continue;
             }
 
+            // skip array append syntax like $arr[] = value, as each creates new element
+            if ($nextAssign->var instanceof ArrayDimFetch && !$nextAssign->var->dim instanceof Expr) {
+                continue;
+            }
+
             // early check self referencing, ensure that variable not re-used
             if ($this->isSelfReferencing($nextAssign)) {
                 continue;
@@ -106,7 +113,7 @@ CODE_SAMPLE
                 continue;
             }
 
-            if (! $stmt->expr->var instanceof Variable && ! $stmt->expr->var instanceof PropertyFetch && ! $stmt->expr->var instanceof StaticPropertyFetch) {
+            if (! $stmt->expr->var instanceof Variable && ! $stmt->expr->var instanceof PropertyFetch && ! $stmt->expr->var instanceof StaticPropertyFetch && ! $stmt->expr->var instanceof ArrayDimFetch) {
                 continue;
             }
 
