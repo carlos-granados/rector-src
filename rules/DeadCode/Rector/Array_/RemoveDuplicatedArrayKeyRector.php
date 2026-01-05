@@ -8,6 +8,8 @@ use PhpParser\Node;
 use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
+use PhpParser\Node\Expr\PostDec;
+use PhpParser\Node\Expr\PostInc;
 use PhpParser\Node\Expr\PreDec;
 use PhpParser\Node\Expr\PreInc;
 use PhpParser\Node\Expr\Variable;
@@ -131,6 +133,14 @@ CODE_SAMPLE
             }
 
             if ($currentArrayItemKey instanceof PreDec) {
+                continue;
+            }
+
+            if ($currentArrayItemKey instanceof PostInc) {
+                continue;
+            }
+
+            if ($currentArrayItemKey instanceof PostDec) {
                 continue;
             }
 
