@@ -117,8 +117,16 @@ CODE_SAMPLE
             return false;
         }
 
-        if ($classMethod->isMagic()) {
+        // Allow __construct and __destruct to be removed from non-final classes
+        // These can be safely removed even in non-final classes if not needed
+        if ($this->isName($classMethod, MethodName::CONSTRUCT) || $this->isName($classMethod, MethodName::DESTRUCT)) {
             return false;
+        }
+
+        // Other magic methods (like __call, __callStatic, __debugInfo, __serialize, etc.)
+        // should be kept in non-final classes because child classes might rely on them
+        if ($classMethod->isMagic()) {
+            return true;
         }
 
         if ($classMethod->isProtected()) {
