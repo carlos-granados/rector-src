@@ -166,6 +166,10 @@ CODE_SAMPLE
 
     private function shouldSkipClass(Class_ $class): bool
     {
+        if ($class->isAnonymous()) {
+            return true;
+        }
+
         if ($class->attrGroups !== []) {
             return true;
         }

@@ -6,6 +6,8 @@ namespace Rector\DeadCode\NodeAnalyzer;
 
 use PhpParser\Node;
 use PhpParser\Node\Arg;
+use PhpParser\Node\ArrayItem;
+use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\CallLike;
 use PhpParser\Node\Expr\MethodCall;
@@ -65,6 +67,11 @@ final readonly class IsClassMethodUsedAnalyzer
 
         // 4. magic array calls!
         if ($this->isClassMethodCalledInLocalArrayCall($class, $classMethod, $scope)) {
+            return true;
+        }
+
+        // 5. methods used in PHP 8 attributes
+        if ($this->isClassMethodUsedInAttributes($class, $classMethodName)) {
             return true;
         }
 
@@ -232,5 +239,52 @@ final readonly class IsClassMethodUsedAnalyzer
 
         return ($subNode->class->isSpecialClassName() || $subNode->class->toString() === $className)
             && $this->nodeNameResolver->isName($subNode->name, $classMethodName);
+    }
+
+    private function isClassMethodUsedInAttributes(Class_ $class, string $classMethodName): bool
+    {
+        /** @var AttributeGroup[] $attributeGroups */
+        $attributeGroups = $this->betterNodeFinder->findInstanceOf($class, AttributeGroup::class);
+
+        foreach ($attributeGroups as $attributeGroup) {
+            foreach ($attributeGroup->attrs as $attribute) {
+                foreach ($attribute->args as $arg) {
+                    if ($this->isMethodReferencedInAttributeArg($arg, $class, $classMethodName)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function isMethodReferencedInAttributeArg(Arg $arg, Class_ $class, string $classMethodName): bool
+    {
+        // Check for array callable like [self::class, 'method'] or [ClassName::class, 'method']
+        if (! $arg->value instanceof Array_) {
+            return false;
+        }
+
+        $array = $arg->value;
+        if (count($array->items) !== 2) {
+            return false;
+        }
+
+        if (! $array->items[0] instanceof ArrayItem || ! $array->items[1] instanceof ArrayItem) {
+            return false;
+        }
+
+        // Check if second element matches the method name
+        $methodNameValue = $this->valueResolver->getValue($array->items[1]->value);
+        if ($methodNameValue !== $classMethodName) {
+            return false;
+        }
+
+        // Check if first element refers to current class
+        $classValue = $this->valueResolver->getValue($array->items[0]->value);
+        $className = $this->nodeNameResolver->getName($class);
+
+        return $classValue === $className;
     }
 }
