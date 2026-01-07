@@ -6,6 +6,7 @@ namespace Rector\DeadCode\Rector\Closure;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\Closure;
+use PhpParser\Node\Expr\FuncCall;
 use Rector\DeadCode\NodeAnalyzer\ExprUsedInNodeAnalyzer;
 use Rector\PhpParser\Node\BetterNodeFinder;
 use Rector\Rector\AbstractRector;
@@ -63,6 +64,16 @@ CODE_SAMPLE
     public function refactor(Node $node): ?Node
     {
         if ($node->uses === []) {
+            return null;
+        }
+
+        // Skip if closure uses get_defined_vars() - all variables are potentially used
+        $hasGetDefinedVars = (bool) $this->betterNodeFinder->findFirst(
+            $node->stmts,
+            fn (Node $subNode): bool => $subNode instanceof FuncCall && $this->isName($subNode, 'get_defined_vars')
+        );
+
+        if ($hasGetDefinedVars) {
             return null;
         }
 
