@@ -125,6 +125,13 @@ CODE_SAMPLE
      */
     private function removeCallerArgs(Class_ $class, ClassMethod $classMethod, array $unusedParameters): bool
     {
+        // Skip if any unused parameter is variadic - removing variadic args requires special handling
+        foreach ($unusedParameters as $param) {
+            if ($param->variadic) {
+                return false;
+            }
+        }
+
         $classMethods = $class->getMethods();
         if ($classMethods === []) {
             return false;
