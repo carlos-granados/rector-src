@@ -9,7 +9,6 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp;
 use PhpParser\Node\Expr\BinaryOp\Concat;
 use PhpParser\Node\Expr\Cast\String_;
-use PhpParser\Node\Expr\Ternary;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -82,8 +81,7 @@ CODE_SAMPLE
         $targetExpr = $expr->expr;
         $tokens = $this->file->getOldTokens();
 
-        // Preserve parentheses for expressions that need them due to operator precedence
-        if ($expr->expr instanceof BinaryOp || $expr->expr instanceof Ternary) {
+        if ($expr->expr instanceof BinaryOp) {
             $castStartTokenPos = $expr->getStartTokenPos();
             $targetExprStartTokenPos = $targetExpr->getStartTokenPos();
 
