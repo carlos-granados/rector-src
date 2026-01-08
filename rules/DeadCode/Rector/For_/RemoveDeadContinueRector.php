@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rector\DeadCode\Rector\For_;
 
+use PhpParser\Node\Expr;
 use PhpParser\Node;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Stmt;
@@ -87,10 +88,18 @@ CODE_SAMPLE
             return false;
         }
 
-        if ($stmt->num instanceof Int_) {
-            return $stmt->num->value < 2;
+        // If continue has no num, it's `continue;` which is removable at end of loop
+        if (!$stmt->num instanceof Expr) {
+            return true;
         }
 
-        return true;
+        // If continue has a non-integer num (like a variable), we can't determine
+        // if it's safe to remove, so preserve it
+        if (! $stmt->num instanceof Int_) {
+            return false;
+        }
+
+        // Only remove continue 0 and continue 1 (both equivalent to plain continue)
+        return $stmt->num->value < 2;
     }
 }
