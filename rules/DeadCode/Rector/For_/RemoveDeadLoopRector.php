@@ -78,7 +78,13 @@ CODE_SAMPLE
         } elseif ($node instanceof For_) {
             $exprs = [...$node->init, ...$node->cond, ...$node->loop];
         } else {
-            $exprs = [$node->expr, $node->valueVar];
+            // Check both value and key variables, filtering out nulls
+            $exprs = array_filter([$node->expr, $node->valueVar, $node->keyVar]);
+
+            // Check if value is by reference (has side effect)
+            if ($node->byRef) {
+                return null;
+            }
         }
 
         foreach ($exprs as $expr) {
