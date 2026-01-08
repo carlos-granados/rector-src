@@ -9,6 +9,7 @@ use PhpParser\Node\Expr\BinaryOp;
 use PhpParser\Node\Expr\BinaryOp\Greater;
 use PhpParser\Node\Expr\BinaryOp\GreaterOrEqual;
 use PhpParser\Node\Expr\BinaryOp\Smaller;
+use PhpParser\Node\Expr\BinaryOp\SmallerOrEqual;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Stmt;
@@ -156,6 +157,7 @@ CODE_SAMPLE
             return null;
         }
 
+        // PHP_VERSION_ID < value: If current version >= value, condition is always false
         if ($this->phpVersion >= $value->value) {
             return NodeVisitor::REMOVE_NODE;
         }
@@ -291,6 +293,69 @@ CODE_SAMPLE
 
         if ($binaryOp instanceof Greater) {
             return $this->refactorGreater($constFetch, $binaryOp, $if);
+        }
+
+        if ($binaryOp instanceof SmallerOrEqual) {
+            return $this->refactorSmallerOrEqual($constFetch, $binaryOp, $if);
+        }
+
+        return null;
+    }
+
+    /**
+     * @return null|Stmt[]|NodeVisitor::REMOVE_NODE
+     */
+    private function refactorSmallerOrEqual(
+        ConstFetch $constFetch,
+        SmallerOrEqual $smallerOrEqual,
+        If_ $if
+    ): null|array|int {
+        if ($smallerOrEqual->left === $constFetch) {
+            return $this->refactorSmallerOrEqualLeft($smallerOrEqual);
+        }
+
+        if ($smallerOrEqual->right === $constFetch) {
+            return $this->refactorSmallerOrEqualRight($smallerOrEqual, $if);
+        }
+
+        return null;
+    }
+
+    /**
+     * @return null|NodeVisitor::REMOVE_NODE
+     */
+    private function refactorSmallerOrEqualLeft(SmallerOrEqual $smallerOrEqual): ?int
+    {
+        $value = $smallerOrEqual->right;
+        if (! $value instanceof Int_) {
+            return null;
+        }
+
+        // PHP_VERSION_ID <= value: If current version > value, condition is always false
+        if ($this->phpVersion > $value->value) {
+            return NodeVisitor::REMOVE_NODE;
+        }
+
+        return null;
+    }
+
+    /**
+     * @return null|Stmt[]|NodeVisitor::REMOVE_NODE
+     */
+    private function refactorSmallerOrEqualRight(SmallerOrEqual $smallerOrEqual, If_ $if): null|array|int
+    {
+        $value = $smallerOrEqual->left;
+        if (! $value instanceof Int_) {
+            return null;
+        }
+
+        // value <= PHP_VERSION_ID: If current version >= value, condition is always true
+        if ($this->phpVersion >= $value->value) {
+            if ($if->stmts === []) {
+                return NodeVisitor::REMOVE_NODE;
+            }
+
+            return $if->stmts;
         }
 
         return null;
