@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Rector\DeadCode\Rector\For_;
 
-use PhpParser\Node\Expr;
 use PhpParser\Node;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Continue_;
@@ -89,7 +89,7 @@ CODE_SAMPLE
         }
 
         // If continue has no num, it's `continue;` which is removable at end of loop
-        if (!$stmt->num instanceof Expr) {
+        if (! $stmt->num instanceof Expr) {
             return true;
         }
 

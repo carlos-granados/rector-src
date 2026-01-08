@@ -8,6 +8,10 @@ use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\CallLike;
+use PhpParser\Node\Expr\PostDec;
+use PhpParser\Node\Expr\PostInc;
+use PhpParser\Node\Expr\PreDec;
+use PhpParser\Node\Expr\PreInc;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\For_;
@@ -166,7 +170,7 @@ CODE_SAMPLE
             return;
         }
 
-        $exprs = [$for->expr, $for->valueVar, $for->valueVar];
+        $exprs = array_filter([$for->expr, $for->valueVar, $for->keyVar]);
         $variables = $this->betterNodeFinder->findInstanceOf($exprs, Variable::class);
         foreach ($variables as $variable) {
             if ($this->stmtsManipulator->isVariableUsedInNextStmt(
@@ -184,6 +188,9 @@ CODE_SAMPLE
 
     private function hasNodeSideEffect(Expr $expr): bool
     {
-        return $this->betterNodeFinder->hasInstancesOf($expr, [CallLike::class, Assign::class]);
+        return $this->betterNodeFinder->hasInstancesOf(
+            $expr,
+            [CallLike::class, Assign::class, PreInc::class, PostInc::class, PreDec::class, PostDec::class]
+        );
     }
 }
