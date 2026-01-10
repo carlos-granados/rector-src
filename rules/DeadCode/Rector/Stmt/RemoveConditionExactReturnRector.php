@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rector\DeadCode\Rector\Stmt;
 
+use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp\Equal;
@@ -133,6 +134,11 @@ CODE_SAMPLE
 
     private function matchSoleIfReturn(If_ $if): ?Return_
     {
+        // skip if with else or elseif
+        if ($if->else instanceof Else_ || $if->elseifs !== []) {
+            return null;
+        }
+
         if (count($if->stmts) !== 1) {
             return null;
         }
