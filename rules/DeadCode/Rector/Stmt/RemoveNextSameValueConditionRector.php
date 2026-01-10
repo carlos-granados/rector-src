@@ -6,6 +6,7 @@ namespace Rector\DeadCode\Rector\Stmt;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\If_;
 use Rector\DeadCode\SideEffect\SideEffectNodeDetector;
 use Rector\PhpParser\Enum\NodeGroup;
@@ -98,9 +99,23 @@ CODE_SAMPLE
             if ($this->isCondVariableUsedInIfBody($stmt)) {
                 continue;
             }
+            // skip if first statement has else or elseif - would change semantics
+            if ($stmt->else instanceof Else_) {
+                continue;
+            }
+            if ($stmt->elseifs !== []) {
+                continue;
+            }
 
             $nextStmt = $node->stmts[$key + 1] ?? null;
             if (! $nextStmt instanceof If_) {
+                continue;
+            }
+            // skip if second statement has else or elseif - would lose those branches
+            if ($nextStmt->else instanceof Else_) {
+                continue;
+            }
+            if ($nextStmt->elseifs !== []) {
                 continue;
             }
 
