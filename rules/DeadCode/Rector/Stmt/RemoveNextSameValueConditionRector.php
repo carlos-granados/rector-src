@@ -99,10 +99,12 @@ CODE_SAMPLE
             if ($this->isCondVariableUsedInIfBody($stmt)) {
                 continue;
             }
+
             // skip if first statement has else or elseif - would change semantics
             if ($stmt->else instanceof Else_) {
                 continue;
             }
+
             if ($stmt->elseifs !== []) {
                 continue;
             }
@@ -111,10 +113,12 @@ CODE_SAMPLE
             if (! $nextStmt instanceof If_) {
                 continue;
             }
+
             // skip if second statement has else or elseif - would lose those branches
             if ($nextStmt->else instanceof Else_) {
                 continue;
             }
+
             if ($nextStmt->elseifs !== []) {
                 continue;
             }
