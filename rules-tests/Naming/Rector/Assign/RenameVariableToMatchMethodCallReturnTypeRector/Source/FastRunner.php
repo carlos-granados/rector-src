@@ -6,8 +6,17 @@ namespace Rector\Tests\Naming\Rector\Assign\RenameVariableToMatchMethodCallRetur
 
 final class FastRunner
 {
-    public function run()
+    public function run(): self
     {
         return $this;
+    }
+
+    public static function create(): self
+    {
+        return new self();
+    }
+
+    public function exit(): void
+    {
     }
 }
