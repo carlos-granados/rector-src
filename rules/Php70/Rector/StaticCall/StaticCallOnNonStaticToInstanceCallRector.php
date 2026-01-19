@@ -158,6 +158,11 @@ CODE_SAMPLE
             return true;
         }
 
+        // cannot instantiate interface, trait, or enum
+        if ($classReflection->isInterface() || $classReflection->isTrait() || $classReflection->isEnum()) {
+            return true;
+        }
+
         // does the method even exist?
         if (! $classReflection->hasMethod($methodName)) {
             return true;
