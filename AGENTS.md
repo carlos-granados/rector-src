@@ -1,91 +1,214 @@
-# Agent Guidelines for Rector Development
-
-This document provides guidance for AI agents working on the Rector codebase.
+# Rector Development Agent Guidelines
 
 ## Project Overview
 
-Rector is an instant upgrade and automated refactoring tool for PHP code. It uses PHP Parser's Abstract Syntax Tree (AST) to analyze and transform PHP code by applying a set of rules (called "Rectors") to the codebase.
+**Rector** is an instant upgrade and automated refactoring tool for PHP code. It uses PHP Parser's Abstract Syntax Tree (AST) to analyze and transform PHP code by applying a set of rules (called "Rectors") to the codebase.
 
-## Architecture
+This repository (`rectorphp/rector-src`) is the development repository. Code here requires PHP 8.2+ and is built/downgraded to PHP 7.4+ for the main `rector/rector` package.
 
-- **`src/`** - Core framework code including application logic, AST analysis, type resolution, and node manipulation
-- **`rules/`** - Rector rule implementations organized by category (CodeQuality, CodingStyle, DeadCode, PHP version upgrades, etc.)
-- **`rules-tests/`** - Tests for Rector rules with fixtures
-- **`tests/`** - Tests for core framework functionality
-- **`config/`** - Configuration files for Rector sets and services
-- **`utils/`** - Utility classes used across the project
-- **`stubs/`** - PHP stubs for type analysis
+---
+
+## Directory Structure
+
+| Directory | Description |
+|-----------|-------------|
+| `src/` | Core framework code (AST analysis, type resolution, node manipulation, application logic) |
+| `rules/` | Rector rule implementations organized by category |
+| `rules-tests/` | Tests for Rector rules with fixture files |
+| `tests/` | Tests for core framework functionality |
+| `config/` | Configuration files for Rector sets and services |
+| `config/set/` | Rule set configurations (e.g., `php80.php`, `code-quality.php`) |
+| `utils/` | Utility classes used across the project |
+| `stubs/` | PHP stubs for type analysis |
+| `bin/` | CLI entry point (`bin/rector`) |
+| `e2e/` | End-to-end test scenarios |
+
+### Rule Categories (in `rules/`)
+
+- **CodeQuality** - General code quality improvements
+- **CodingStyle** - Coding style and formatting rules
+- **DeadCode** - Remove unused/dead code
+- **EarlyReturn** - Simplify control flow with early returns
+- **Naming** - Variable and method naming improvements
+- **Php52-Php85** - PHP version upgrade rules
+- **TypeDeclaration** - Add type declarations to code
+- **Transform** - Code transformation utilities
+- And others (Arguments, Carbon, Privatization, Renaming, etc.)
+
+---
 
 ## Development Requirements
 
-- **PHP Version**: 8.2+ (the rector-src requires PHP 8.2, though the built rector/rector package supports PHP 7.4+)
-- **Dependencies**: Managed via Composer
+- **PHP Version**: 8.2+
+- **Dependencies**: Managed via Composer (`composer install`)
 
-## Testing & Validation
+---
 
-After making ANY code changes, you MUST:
+## IMPORTANT: Testing & Validation Requirements
 
-1. **Run the complete test suite**:
-   ```bash
-   composer complete-check
-   ```
-   This runs:
-   - Code style checks (ECS)
-   - Static analysis (PHPStan)
-   - PHPUnit tests
+**After making ANY code changes, you MUST run the complete validation suite before considering the work done.**
 
-2. **Apply Rector rules to your changes**:
-   ```bash
-   composer rector
-   ```
-   This ensures your code follows Rector's own coding standards and refactoring rules.
+### Required Commands
 
-3. **Fix code style issues** (if any):
-   ```bash
-   composer fix-cs
-   ```
+Run the full CI check suite:
+
+```bash
+composer complete-check
+```
+
+This command runs:
+1. **ECS (Easy Coding Standard)** - Code style checks
+2. **PHPStan** - Static analysis (level 8)
+3. **PHPUnit** - Unit tests
+
+### Individual Commands
+
+| Command | Description |
+|---------|-------------|
+| `composer check-cs` | Check code style only |
+| `composer fix-cs` | Auto-fix code style issues |
+| `composer phpstan` | Run static analysis only |
+| `composer rector` | Apply Rector rules to your own code |
+| `vendor/bin/phpunit` | Run all tests |
+| `vendor/bin/phpunit tests/path/to/Test.php` | Run a specific test file |
+| `vendor/bin/phpunit --filter TestMethodName` | Run a specific test method |
+
+### Running Rector on a File
+
+To test a Rector rule on a specific file:
+
+```bash
+bin/rector process <file> --dry-run
+```
+
+---
 
 ## Coding Standards
 
-- Use **strict types** (`declare(strict_types=1);`) in all PHP files
+- Use `declare(strict_types=1);` in **all** PHP files
 - Follow **PSR-12** coding standards
-- Use **typed properties** and **return types** wherever possible
-- Write **descriptive class and method names** that clearly indicate purpose
+- Use **typed properties** and **return types** everywhere
+- Write descriptive class and method names
 - Keep methods focused - each should do one thing well
+- No inline comments unless explicitly requested
+- Do not add copyright or license headers
+
+---
 
 ## Working with Rector Rules
 
 ### Rule Structure
 
 Each Rector rule:
-- Extends `AbstractRector` or a more specific base class
-- Implements `getRuleDefinition()` to describe what the rule does
-- Implements `getNodeTypes()` to specify which AST node types it operates on
-- Implements `refactor(Node $node)` to perform the transformation
+1. Extends `AbstractRector` (or a more specific base class)
+2. Implements `getRuleDefinition()` - describes what the rule does with code samples
+3. Implements `getNodeTypes()` - specifies which AST node types it operates on
+4. Implements `refactor(Node $node)` - performs the transformation
+
+Example rule location: `rules/CodeQuality/Rector/If_/SimplifyIfReturnBoolRector.php`
 
 ### Rule Testing
 
-- Each rule should have corresponding tests in `rules-tests/`
-- Tests use fixture files: `Fixture/` for input and expected output
-- Test classes extend `AbstractRectorTestCase`
-- Use `doTestFile()` to run tests against fixture files
+Each rule must have tests in `rules-tests/` with the following structure:
 
-### Adding a New Rule
+```
+rules-tests/<Category>/Rector/<NodeType>/<RuleName>/
+|-- <RuleName>Test.php           # Test class extending AbstractRectorTestCase
+|-- config/
+|   +-- configured_rule.php      # Rule configuration
++-- Fixture/
+    +-- fixture.php.inc          # Test fixtures (before/after code)
+```
 
-1. Create the rule class in the appropriate `rules/` subdirectory
-2. Create test class in corresponding `rules-tests/` subdirectory
-3. Create fixture files showing before/after transformations
-4. Run `composer complete-check` to validate
-5. Run `composer rector` to ensure the code follows standards
+### Fixture File Format
+
+Fixture files use `-----` as a separator between input and expected output:
+
+```php
+<?php
+// Input code (before transformation)
+class SomeClass
+{
+    public function test()
+    {
+        // original code
+    }
+}
+
+?>
+-----
+<?php
+// Expected output (after transformation)
+class SomeClass
+{
+    public function test()
+    {
+        // transformed code
+    }
+}
+
+?>
+```
+
+If no transformation should occur, omit the `-----` separator and expected output.
+
+### Test Class Template
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Rector\Tests\<Category>\Rector\<NodeType>\<RuleName>;
+
+use Iterator;
+use PHPUnit\Framework\Attributes\DataProvider;
+use Rector\Testing\PHPUnit\AbstractRectorTestCase;
+
+final class <RuleName>Test extends AbstractRectorTestCase
+{
+    #[DataProvider('provideData')]
+    public function test(string $filePath): void
+    {
+        $this->doTestFile($filePath);
+    }
+
+    public static function provideData(): Iterator
+    {
+        return self::yieldFilesFromDirectory(__DIR__ . '/Fixture');
+    }
+
+    public function provideConfigFilePath(): string
+    {
+        return __DIR__ . '/config/configured_rule.php';
+    }
+}
+```
+
+---
+
+## File Naming Conventions
+
+- **Rule classes**: `<Action><Subject>Rector.php` (e.g., `RemoveUnusedPrivateMethodRector.php`)
+- **Test classes**: Same name with `Test` suffix (e.g., `RemoveUnusedPrivateMethodRectorTest.php`)
+- **Fixture files**: Descriptive names ending in `.php.inc` in `Fixture/` directory
+- **Source files for tests**: Support files go in `Source/` directories
+
+---
 
 ## Key Classes & Concepts
 
-- **Node**: Represents an AST node from PHP Parser (e.g., `Expr\Variable`, `Stmt\Class_`)
-- **NodeTypeResolver**: Resolves PHP types for nodes (using PHPStan)
-- **NodeNameResolver**: Resolves names of nodes (class names, method names, etc.)
-- **PhpDocInfoFactory**: Parses and provides access to PHPDoc comments
-- **NodeManipulator**: Various utilities for manipulating AST nodes
-- **ValueObject**: Immutable data transfer objects used throughout Rector
+| Class | Purpose |
+|-------|----------|
+| `AbstractRector` | Base class for all Rector rules |
+| `Node` | AST node from PHP Parser (e.g., `Expr\Variable`, `Stmt\Class_`) |
+| `NodeTypeResolver` | Resolves PHP types for nodes (using PHPStan) |
+| `NodeNameResolver` | Resolves names of nodes (class names, method names, etc.) |
+| `PhpDocInfoFactory` | Parses and provides access to PHPDoc comments |
+| `RectorConfig` | Configuration class for Rector rules |
+| `AbstractRectorTestCase` | Base class for rule tests |
+
+---
 
 ## Common Pitfalls
 
@@ -93,32 +216,47 @@ Each Rector rule:
 - **Check for null returns** - Many node resolution methods return nullable types
 - **Use proper type checking** - Use `NodeTypeResolver` for accurate type information
 - **Consider edge cases** - PHP has many syntax variations; test thoroughly
-- **Avoid false positives** - Rules should only trigger when transformation is safe and beneficial
+- **Avoid false positives** - Rules should only trigger when transformation is safe
 
-## File Naming Conventions
-
-- **Rule classes**: `<Action><Subject>Rector.php` (e.g., `RemoveUnusedPrivateMethodRector.php`)
-- **Test classes**: Same name with `Test` suffix (e.g., `RemoveUnusedPrivateMethodRectorTest.php`)
-- **Fixture files**: Descriptive names in `Fixture/` directory
-- **Source files for tests**: Support files for tests go in `Source/` directories
+---
 
 ## Debugging
 
 - Use `dump()` or `dd()` for debugging during development (from `tracy/tracy`)
-- Enable pretty print for PHPUnit: `vendor/bin/phpunit --enable-pretty-print`
-- Run specific test: `vendor/bin/phpunit tests/path/to/Test.php`
-- Run specific Rector rule on file: `bin/rector process <file> --dry-run --debug`
+- **Run individual rule tests for faster feedback** - this is the recommended debugging approach:
 
-## Performance Considerations
+```bash
+# Run a specific test class
+vendor/bin/phpunit rules-tests/CodeQuality/Rector/If_/SimplifyIfReturnBoolRector/SimplifyIfReturnBoolRectorTest.php
 
-- Rector processes large codebases - keep rules efficient
-- Cache expensive operations where possible
-- Avoid unnecessary node traversals
-- Use early returns to skip nodes that don't match rule criteria
+# Run a specific test method
+vendor/bin/phpunit --filter testMethodName
+```
 
-## Important Notes
+- To manually test a rule on a file: `bin/rector process <file> --dry-run`
 
-- This is `rectorphp/rector-src` - the development repository
-- User-facing issues should be reported in `rectorphp/rector`
-- Changes here are built and downgraded to PHP 7.4+ for the main package
-- Many vendor packages have custom patches applied (see `composer.json` extra.patches)
+---
+
+## Git Operations - DO NOT COMMIT OR PUSH
+
+**Do NOT commit or push any code changes unless explicitly instructed to do so by the user.**
+
+- Do not run `git commit`
+- Do not run `git push`
+- Do not create new git branches unless explicitly requested
+- Leave all changes uncommitted for user review
+
+The user will handle all git operations (committing, pushing, branching) themselves.
+
+---
+
+## Summary Checklist
+
+Before completing any task:
+
+- [ ] Code follows PSR-12 and project coding standards
+- [ ] All PHP files have `declare(strict_types=1);`
+- [ ] New rules have corresponding tests with fixtures
+- [ ] Run `composer complete-check` and all checks pass
+- [ ] Run `composer rector` to ensure code follows Rector's own rules
+- [ ] Do NOT commit or push changes
