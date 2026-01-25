@@ -10,6 +10,7 @@ use PhpParser\Node\Arg;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
+use PhpParser\Node\Expr\CallLike;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\List_;
 use PhpParser\Node\Stmt;
@@ -89,13 +90,15 @@ CODE_SAMPLE
             return null;
         }
 
-        if (! isset($eachFuncCall->getArgs()[0])) {
+        $eachedVariable = $eachFuncCall->getArgs()[0]
+            ->value;
+
+        // skip when each() argument is a function/method call - transformation would call it multiple times
+        if ($eachedVariable instanceof CallLike) {
             return null;
         }
 
         $assignVariable = $assign->var;
-        $eachedVariable = $eachFuncCall->getArgs()[0]
-            ->value;
 
         return $this->createNewStmts($assignVariable, $eachedVariable);
     }
