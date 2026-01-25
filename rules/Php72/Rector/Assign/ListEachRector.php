@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Rector\Php72\Rector\Assign;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr\Assign;
+use PhpParser\Node\Expr\CallLike;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Expression;
 use Rector\Exception\ShouldNotHappenException;
@@ -128,6 +130,13 @@ CODE_SAMPLE
     private function shouldSkipAssign(ListAndEach $listAndEach): bool
     {
         $list = $listAndEach->getList();
+
+        // skip when each() argument is a function/method call - transformation would call it multiple times
+        $eachFuncCall = $listAndEach->getEachFuncCall();
+        if ($eachFuncCall->args[0] instanceof Arg && $eachFuncCall->args[0]->value instanceof CallLike) {
+            return true;
+        }
+
         if (count($list->items) !== 2) {
             return true;
         }
