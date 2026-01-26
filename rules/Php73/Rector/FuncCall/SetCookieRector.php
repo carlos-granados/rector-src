@@ -104,6 +104,11 @@ CODE_SAMPLE
         if ($argsCount <= 2) {
             return true;
         }
+        foreach ($args as $arg) {
+            if ($arg instanceof Arg && $arg->name !== null) {
+                return true;
+            }
+        }
 
         if ($args[2]->value instanceof Array_) {
             return true;
