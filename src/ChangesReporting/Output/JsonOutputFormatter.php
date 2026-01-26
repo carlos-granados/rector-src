@@ -13,10 +13,7 @@ use Rector\ValueObject\ProcessResult;
 
 final readonly class JsonOutputFormatter implements OutputFormatterInterface
 {
-    /**
-     * @var string
-     */
-    public const NAME = 'json';
+    public const string NAME = 'json';
 
     public function getName(): string
     {
@@ -27,7 +24,7 @@ final readonly class JsonOutputFormatter implements OutputFormatterInterface
     {
         $errorsJson = [
             'totals' => [
-                'changed_files' => count($processResult->getFileDiffs()),
+                'changed_files' => $processResult->getTotalChanged(),
             ],
         ];
 

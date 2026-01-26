@@ -17,10 +17,12 @@ use Rector\StaticTypeMapper\StaticTypeMapper;
 final class ConstantArrayTypeGeneralizer
 {
     /**
+     * @var int
+     *
      * Using 10-level array @return docblocks makes code very hard to read,
      * lets limit it to reasonable level
      */
-    private const MAX_NESTING = 3;
+    private const int MAX_NESTING = 3;
 
     private int $currentNesting = 0;
 

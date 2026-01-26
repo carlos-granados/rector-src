@@ -50,10 +50,7 @@ use Webmozart\Assert\Assert;
  */
 final class RectorConfigBuilder
 {
-    /**
-     * @var int
-     */
-    private const MAX_LEVEL_GAP = 10;
+    private const int MAX_LEVEL_GAP = 10;
 
     /**
      * @var string[]
@@ -1233,6 +1230,7 @@ final class RectorConfigBuilder
     /**
      * DX helper
      * @see https://getrector.com/documentation/creating-a-node-visitor
+     * @param class-string $decoratingNodeVisitorClass
      */
     public function registerDecoratingNodeVisitor(string $decoratingNodeVisitorClass): self
     {

@@ -25,24 +25,24 @@ use PhpParser\Node\Stmt\Nop;
 use PhpParser\Node\Stmt\Return_;
 use PhpParser\Node\Stmt\Switch_;
 use PhpParser\Node\Stmt\TryCatch;
-use Rector\PhpParser\Node\CustomNode\FileWithoutNamespace;
+use Rector\PhpParser\Node\FileNode;
 
 final class TerminatedNodeAnalyzer
 {
     /**
      * @var array<class-string<Node>>
      */
-    private const TERMINABLE_NODES = [Return_::class, Break_::class, Continue_::class];
+    private const array TERMINABLE_NODES = [Return_::class, Break_::class, Continue_::class];
 
     /**
      * @var array<class-string<Node>>
      */
-    private const TERMINABLE_NODES_BY_ITS_STMTS = [TryCatch::class, If_::class, Switch_::class];
+    private const array TERMINABLE_NODES_BY_ITS_STMTS = [TryCatch::class, If_::class, Switch_::class];
 
     /**
      * @var array<class-string<Node>>
      */
-    private const ALLOWED_CONTINUE_CURRENT_STMTS = [InlineHTML::class, Nop::class];
+    private const array ALLOWED_CONTINUE_CURRENT_STMTS = [InlineHTML::class, Nop::class];
 
     /**
      * @param StmtsAware $stmtsAware
@@ -53,7 +53,7 @@ final class TerminatedNodeAnalyzer
             return false;
         }
 
-        if (($stmtsAware instanceof FileWithoutNamespace || $stmtsAware instanceof Namespace_) && ($currentStmt instanceof ClassLike || $currentStmt instanceof Function_)) {
+        if (($stmtsAware instanceof FileNode || $stmtsAware instanceof Namespace_) && ($currentStmt instanceof ClassLike || $currentStmt instanceof Function_)) {
             return false;
         }
 

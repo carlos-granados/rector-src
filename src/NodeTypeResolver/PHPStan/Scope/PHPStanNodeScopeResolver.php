@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rector\NodeTypeResolver\PHPStan\Scope;
 
+use PHPStan\Analyser\Fiber\FiberScope;
 use Error;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
@@ -106,7 +107,7 @@ use Rector\Contract\PhpParser\DecoratingNodeVisitorInterface;
 use Rector\NodeAnalyzer\ClassAnalyzer;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
-use Rector\PhpParser\Node\CustomNode\FileWithoutNamespace;
+use Rector\PhpParser\Node\FileNode;
 use Rector\Util\Reflection\PrivatesAccessor;
 use Webmozart\Assert\Assert;
 
@@ -116,10 +117,7 @@ use Webmozart\Assert\Assert;
  */
 final readonly class PHPStanNodeScopeResolver
 {
-    /**
-     * @var string
-     */
-    private const CONTEXT = 'context';
+    private const string CONTEXT = 'context';
 
     private NodeTraverser $nodeTraverser;
 
@@ -161,6 +159,10 @@ final readonly class PHPStanNodeScopeResolver
             &$nodeCallback,
             $filePath,
         ): void {
+            if ($mutatingScope instanceof FiberScope) {
+                $mutatingScope = $mutatingScope->toMutatingScope();
+            }
+
             // the class reflection is resolved AFTER entering to class node
             // so we need to get it from the first after this one
             if ($node instanceof Class_ || $node instanceof Interface_ || $node instanceof Enum_) {
@@ -202,7 +204,8 @@ final readonly class PHPStanNodeScopeResolver
                 $node->setAttribute(AttributeKey::SCOPE, $mutatingScope);
             }
 
-            if ($node instanceof FileWithoutNamespace) {
+            // handle unwrapped stmts
+            if ($node instanceof FileNode) {
                 $this->nodeScopeResolverProcessNodes($node->stmts, $mutatingScope, $nodeCallback);
                 return;
             }

@@ -11,6 +11,7 @@ use PhpParser\Node\Expr\YieldFrom;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Return_;
 use PhpParser\NodeFinder;
 use PhpParser\NodeVisitor;
@@ -239,7 +240,7 @@ final readonly class BetterNodeFinder
         $this->simpleCallableNodeTraverser->traverseNodesWithCallable(
             $nodes,
             static function (Node $subNode) use ($types, &$foundNodes): ?int {
-                if ($subNode instanceof Class_ || $subNode instanceof FunctionLike) {
+                if ($subNode instanceof Class_ || ($subNode instanceof FunctionLike && ! $subNode instanceof ClassMethod)) {
                     return NodeVisitor::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
                 }
 

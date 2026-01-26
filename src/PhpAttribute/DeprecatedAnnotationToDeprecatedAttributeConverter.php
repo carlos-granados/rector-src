@@ -16,6 +16,7 @@ use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Const_;
 use PhpParser\Node\Stmt\Function_;
+use PhpParser\Node\Stmt\Trait_;
 use PHPStan\PhpDocParser\Ast\PhpDoc\DeprecatedTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\GenericTagValueNode;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
@@ -29,15 +30,13 @@ final readonly class DeprecatedAnnotationToDeprecatedAttributeConverter
 {
     /**
      * @see https://regex101.com/r/qNytVk/1
-     * @var string
      */
-    private const VERSION_MATCH_REGEX = '/^(?:(\d+\.\d+\.\d+)\s+)?(.*)$/';
+    private const string VERSION_MATCH_REGEX = '/^(?:(\d+\.\d+\.\d+)\s+)?(.*)$/';
 
     /**
      * @see https://regex101.com/r/SVDPOB/1
-     * @var string
      */
-    private const START_STAR_SPACED_REGEX = '#^ *\*#ms';
+    private const string START_STAR_SPACED_REGEX = '#^ *\*#ms';
 
     public function __construct(
         private PhpDocTagRemover $phpDocTagRemover,
@@ -47,7 +46,7 @@ final readonly class DeprecatedAnnotationToDeprecatedAttributeConverter
     ) {
     }
 
-    public function convert(ClassConst|Function_|ClassMethod|Const_ $node): ?Node
+    public function convert(ClassConst|Function_|ClassMethod|Const_|Trait_ $node): ?Node
     {
         $hasChanged = false;
         $phpDocInfo = $this->phpDocInfoFactory->createFromNode($node);

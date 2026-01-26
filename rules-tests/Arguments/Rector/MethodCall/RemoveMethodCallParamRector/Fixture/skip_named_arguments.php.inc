@@ -2,13 +2,9 @@
 
 namespace Rector\Tests\Arguments\Rector\MethodCall\RemoveMethodCallParamRector\Fixture;
 
-use Rector\Tests\Arguments\Rector\MethodCall\RemoveMethodCallParamRector\Source\MethodCaller;
+use Rector\Tests\Arguments\Rector\MethodCall\RemoveMethodCallParamRector\Source\SomeMultiArg;
 
-final class SkipNamedArguments
-{
-    public function run(MethodCaller $caller)
-    {
-        $caller->process(first: 1, second: 2);
-        $caller->process(1, second: 2);
-    }
-}
+$object = new SomeMultiArg();
+$object->firstArgument(b: 1);
+$object->secondArgument(a: 1);
+$object->secondArgument(0, c: 2);

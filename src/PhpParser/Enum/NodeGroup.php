@@ -12,6 +12,7 @@ use PhpParser\Node\Stmt\Catch_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Declare_;
 use PhpParser\Node\Stmt\Do_;
 use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\ElseIf_;
@@ -27,7 +28,7 @@ use PhpParser\Node\Stmt\Switch_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\TryCatch;
 use PhpParser\Node\Stmt\While_;
-use Rector\PhpParser\Node\CustomNode\FileWithoutNamespace;
+use Rector\PhpParser\Node\FileNode;
 
 final class NodeGroup
 {
@@ -38,7 +39,7 @@ final class NodeGroup
      *
      * @var array<class-string<Node>>
      */
-    public const STMTS_AWARE = [
+    public const array STMTS_AWARE = [
         Block::class,
         Closure::class,
         Case_::class,
@@ -55,13 +56,14 @@ final class NodeGroup
         Namespace_::class,
         TryCatch::class,
         While_::class,
-        FileWithoutNamespace::class,
+        FileNode::class,
+        Declare_::class,
     ];
 
     /**
      * @var array<class-string<Node>>
      */
-    public const STMTS_TO_HAVE_NEXT_NEWLINE = [
+    public const array STMTS_TO_HAVE_NEXT_NEWLINE = [
         ClassMethod::class,
         Function_::class,
         Property::class,

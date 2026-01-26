@@ -21,7 +21,7 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Type\ObjectType;
 use Rector\Naming\Naming\PropertyNaming;
 use Rector\NodeTypeResolver\Node\AttributeKey;
-use Rector\PhpParser\Node\CustomNode\FileWithoutNamespace;
+use Rector\PhpParser\Node\FileNode;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -32,10 +32,9 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 final class CatchExceptionNameMatchingTypeRector extends AbstractRector
 {
     /**
-     * @var string
      * @see https://regex101.com/r/xmfMAX/1
      */
-    private const STARTS_WITH_ABBREVIATION_REGEX = '#^([A-Za-z]+?)([A-Z]{1}[a-z]{1})([A-Za-z]*)#';
+    private const string STARTS_WITH_ABBREVIATION_REGEX = '#^([A-Za-z]+?)([A-Z]{1}[a-z]{1})([A-Za-z]*)#';
 
     public function __construct(
         private readonly PropertyNaming $propertyNaming,
@@ -73,21 +72,20 @@ CODE_SAMPLE
      */
     public function getNodeTypes(): array
     {
-        return [
-            ClassMethod::class,
-            Function_::class,
-            Closure::class,
-            FileWithoutNamespace::class,
-            Namespace_::class,
-        ];
+        return [ClassMethod::class, Function_::class, Closure::class, FileNode::class, Namespace_::class];
     }
 
     /**
-     * @param ClassMethod|Function_|Closure|FileWithoutNamespace|Namespace_ $node
+     * @param ClassMethod|Function_|Closure|FileNode|Namespace_ $node
      */
     public function refactor(Node $node): ?Node
     {
         if ($node->stmts === null) {
+            return null;
+        }
+
+        if ($node instanceof FileNode && $node->isNamespaced()) {
+            // handled in Namespace_ node
             return null;
         }
 

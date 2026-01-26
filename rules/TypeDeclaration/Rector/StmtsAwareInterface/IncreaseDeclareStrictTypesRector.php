@@ -18,7 +18,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class IncreaseDeclareStrictTypesRector extends AbstractRector implements ConfigurableRectorInterface, DeprecatedInterface
 {
-    public const LIMIT = 'limit';
+    public const string LIMIT = 'limit';
 
     public function getRuleDefinition(): RuleDefinition
     {
@@ -62,7 +62,7 @@ CODE_SAMPLE
     public function refactor(Node $node): ?Node
     {
         throw new ShouldNotHappenException(sprintf(
-            '"%s" is deprecated as changes strict types randomly on each run.. Use "%s" Rector on specific paths instead.',
+            '"%s" is deprecated as changes strict types randomly on each run. Use "%s" Rector on specific paths instead.',
             self::class,
             DeclareStrictTypesRector::class
         ));

@@ -12,7 +12,6 @@ use PhpParser\Node\Stmt\Const_;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Trait_;
-use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor;
 use PhpParser\NodeVisitorAbstract;
 use PHPStan\Analyser\MutatingScope;
@@ -37,10 +36,7 @@ use Rector\ValueObject\Application\File;
 
 abstract class AbstractRector extends NodeVisitorAbstract implements RectorInterface
 {
-    /**
-     * @var string
-     */
-    private const EMPTY_NODE_ARRAY_MESSAGE = <<<CODE_SAMPLE
+    private const string EMPTY_NODE_ARRAY_MESSAGE = <<<CODE_SAMPLE
 Array of nodes cannot be empty. Ensure "%s->refactor()" returns non-empty array for Nodes.
 
 A) Direct return null for no change:
@@ -72,14 +68,7 @@ CODE_SAMPLE;
 
     private CommentsMerger $commentsMerger;
 
-    /**
-     * @var array<int, Node[]>
-     */
-    private array $nodesToReturn = [];
-
     private CreatedByRuleDecorator $createdByRuleDecorator;
-
-    private ?int $toBeRemovedNodeId = null;
 
     public function autowire(
         NodeNameResolver $nodeNameResolver,
@@ -128,14 +117,10 @@ CODE_SAMPLE;
     }
 
     /**
-     * @return NodeTraverser::REMOVE_NODE|Node|null
+     * @return NodeVisitor::REMOVE_NODE|Node|null|Node[]
      */
-    final public function enterNode(Node $node): int|Node|null
+    final public function enterNode(Node $node): int|Node|null|array
     {
-        if (! $this->isMatchingNodeType($node)) {
-            return null;
-        }
-
         if (is_a($this, HTMLAverseRectorInterface::class, true) && $this->file->containsHTML()) {
             return null;
         }
@@ -171,45 +156,22 @@ CODE_SAMPLE;
                 return null;
             }
 
-            // log here, so we can remove the node in leaveNode() method
-            $this->toBeRemovedNodeId = spl_object_id($originalNode);
-
             // notify this rule changed code
             $rectorWithLineChange = new RectorWithLineChange(static::class, $originalNode->getStartLine());
             $this->file->addRectorClassWithLine($rectorWithLineChange);
 
-            // keep original node as node will be removed in leaveNode()
-            return $originalNode;
+            return $refactoredNodeOrState;
         }
 
         return $this->postRefactorProcess($originalNode, $node, $refactoredNodeOrState, $filePath);
     }
 
     /**
-     * Replacing nodes in leaveNode() method avoids infinite recursion
-     * see"infinite recursion" in https://github.com/nikic/PHP-Parser/blob/master/doc/component/Walking_the_AST.markdown
-     *
-     * @return Node|Node[]|NodeVisitor::REMOVE_NODE|null
+     * @deprecated no longer used
      */
     final public function leaveNode(Node $node): array|int|Node|null
     {
-        if ($node->hasAttribute(AttributeKey::ORIGINAL_NODE)) {
-            return null;
-        }
-
-        // nothing to change here
-        if ($this->toBeRemovedNodeId === null && $this->nodesToReturn === []) {
-            return null;
-        }
-
-        $objectId = spl_object_id($node);
-        if ($this->toBeRemovedNodeId === $objectId) {
-            $this->toBeRemovedNodeId = null;
-
-            return NodeVisitor::REMOVE_NODE;
-        }
-
-        return $this->nodesToReturn[$objectId] ?? $node;
+        return null;
     }
 
     protected function isName(Node $node, string $name): bool
@@ -274,13 +236,14 @@ CODE_SAMPLE;
 
     /**
      * @param Node|Node[] $refactoredNode
+     * @return Node|Node[]
      */
     private function postRefactorProcess(
         Node $originalNode,
         Node $node,
         Node|array $refactoredNode,
         string $filePath
-    ): Node {
+    ): Node|array {
         /** @var non-empty-array<Node>|Node $refactoredNode */
         $this->createdByRuleDecorator->decorate($refactoredNode, $originalNode, static::class);
 
@@ -289,20 +252,8 @@ CODE_SAMPLE;
 
         /** @var MutatingScope|null $currentScope */
         $currentScope = $node->getAttribute(AttributeKey::SCOPE);
-
-        if (is_array($refactoredNode)) {
-            $this->refreshScopeNodes($refactoredNode, $filePath, $currentScope);
-
-            // search "infinite recursion" in https://github.com/nikic/PHP-Parser/blob/master/doc/component/Walking_the_AST.markdown
-            $originalNodeId = spl_object_id($originalNode);
-
-            // will be replaced in leaveNode() the original node must be passed
-            $this->nodesToReturn[$originalNodeId] = $refactoredNode;
-
-            return $originalNode;
-        }
-
         $this->refreshScopeNodes($refactoredNode, $filePath, $currentScope);
+
         return $refactoredNode;
     }
 
@@ -316,17 +267,5 @@ CODE_SAMPLE;
         foreach ($nodes as $node) {
             $this->changedNodeScopeRefresher->refresh($node, $filePath, $mutatingScope);
         }
-    }
-
-    private function isMatchingNodeType(Node $node): bool
-    {
-        $nodeClass = $node::class;
-        foreach ($this->getNodeTypes() as $nodeType) {
-            if (is_a($nodeClass, $nodeType, true)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
