@@ -90,15 +90,16 @@ CODE_SAMPLE
             return null;
         }
 
-        if ($firstArg->value instanceof ConstFetch) {
-            $nodeName = $this->getName($firstArg->value);
-            if ($nodeName === null) {
-                return null;
-            }
-
-            $firstArg->value = new String_($nodeName);
+        if (! $firstArg->value instanceof ConstFetch) {
+            return null;
         }
 
+        $nodeName = $this->getName($firstArg->value);
+        if ($nodeName === null) {
+            return null;
+        }
+
+        $firstArg->value = new String_($nodeName);
         return $node;
     }
 }
