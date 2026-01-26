@@ -110,26 +110,8 @@ CODE_SAMPLE
                 continue;
             }
 
-            // skip if first statement has else or elseif - would change semantics
-            if ($stmt->else instanceof Else_) {
-                continue;
-            }
-
-            if ($stmt->elseifs !== []) {
-                continue;
-            }
-
             $nextStmt = $node->stmts[$key + 1] ?? null;
             if (! $nextStmt instanceof If_) {
-                continue;
-            }
-
-            // skip if second statement has else or elseif - would lose those branches
-            if ($nextStmt->else instanceof Else_) {
-                continue;
-            }
-
-            if ($nextStmt->elseifs !== []) {
                 continue;
             }
 
