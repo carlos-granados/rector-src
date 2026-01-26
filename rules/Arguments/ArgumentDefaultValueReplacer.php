@@ -102,10 +102,6 @@ final readonly class ArgumentDefaultValueReplacer
             return null;
         }
 
-        if ($this->argsAnalyzer->hasNamedArg($expr->getArgs())) {
-            return null;
-        }
-
         $position = $replaceArgumentDefaultValue->getPosition();
         $arguments = $expr->getArgs();
         $firstNamedArgPosition = $this->argsAnalyzer->resolveFirstNamedArgPosition($arguments);

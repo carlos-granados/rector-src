@@ -82,10 +82,6 @@ CODE_SAMPLE
             return null;
         }
 
-        if ($this->argsAnalyzer->hasNamedArg($node->getArgs())) {
-            return null;
-        }
-
         foreach ($this->removeMethodCallParams as $removeMethodCallParam) {
             if (! $this->isName($node->name, $removeMethodCallParam->getMethodName())) {
                 continue;
