@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rector\Php73\Rector\FuncCall;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\FuncCall;
 use Rector\Rector\AbstractRector;
 use Rector\ValueObject\PhpVersionFeature;
@@ -55,7 +56,20 @@ CODE_SAMPLE
             return null;
         }
 
-        if (! isset($node->args[2])) {
+        // handle named argument case_insensitive
+        foreach ($node->args as $key => $arg) {
+            if (! $arg instanceof Arg) {
+                continue;
+            }
+
+            if ($arg->name !== null && $this->isName($arg->name, 'case_insensitive')) {
+                unset($node->args[$key]);
+                return $node;
+            }
+        }
+
+        // positional argument at index 2
+        if (! isset($node->args[2]) || ($node->args[2] instanceof Arg && $node->args[2]->name !== null)) {
             return null;
         }
 
