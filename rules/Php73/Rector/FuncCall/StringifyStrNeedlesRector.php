@@ -79,6 +79,13 @@ CODE_SAMPLE
             return null;
         }
 
+        // Skip if any argument is named - reordered named args can't be safely handled
+        foreach ($node->args as $arg) {
+            if ($arg instanceof Arg && $arg->name !== null) {
+                return null;
+            }
+        }
+
         if (! $node->args[1] instanceof Arg) {
             return null;
         }
