@@ -69,13 +69,6 @@ CODE_SAMPLE
             return null;
         }
 
-        // Skip named arguments - positional access would be unreliable
-        foreach ($node->args as $arg) {
-            if ($arg instanceof Arg && $arg->name !== null) {
-                return null;
-            }
-        }
-
         if (! $this->isName($node->args[1]->value, 'FILTER_SANITIZE_MAGIC_QUOTES')) {
             return null;
         }

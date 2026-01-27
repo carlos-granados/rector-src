@@ -83,13 +83,6 @@ CODE_SAMPLE
             return null;
         }
 
-        // Skip named arguments - positional access would be unreliable
-        foreach ($node->getArgs() as $arg) {
-            if ($arg instanceof Arg && $arg->name !== null) {
-                return null;
-            }
-        }
-
         $firstArg = $node->getArgs()[0] ?? null;
         if (! $firstArg instanceof Arg) {
             return null;
