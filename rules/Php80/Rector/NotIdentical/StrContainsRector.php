@@ -96,6 +96,12 @@ CODE_SAMPLE
         if ($funcCall->isFirstClassCallable()) {
             return null;
         }
+        // Skip named arguments - positional access would be unreliable
+        foreach ($funcCall->getArgs() as $arg) {
+            if ($arg instanceof Arg && $arg->name !== null) {
+                return null;
+            }
+        }
 
         if (isset($funcCall->getArgs()[2])) {
             $secondArg = $funcCall->getArgs()[2];
