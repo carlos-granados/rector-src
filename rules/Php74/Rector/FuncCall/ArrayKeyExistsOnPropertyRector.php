@@ -80,6 +80,13 @@ CODE_SAMPLE
             return null;
         }
 
+        // Skip named arguments - positional access would be unreliable
+        foreach ($node->args as $arg) {
+            if ($arg instanceof Arg && $arg->name !== null) {
+                return null;
+            }
+        }
+
         $firstArgStaticType = $this->getType($node->args[1]->value);
         if (! $firstArgStaticType instanceof ObjectType) {
             return null;
