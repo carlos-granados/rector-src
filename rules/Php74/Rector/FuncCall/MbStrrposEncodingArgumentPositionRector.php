@@ -61,6 +61,13 @@ final class MbStrrposEncodingArgumentPositionRector extends AbstractRector imple
             return null;
         }
 
+        // Skip named arguments - positional access would be unreliable
+        foreach ($node->args as $arg) {
+            if ($arg instanceof Arg && $arg->name !== null) {
+                return null;
+            }
+        }
+
         $secondArgType = $this->getType($node->args[2]->value);
         if ($secondArgType->isInteger()->yes()) {
             return null;
