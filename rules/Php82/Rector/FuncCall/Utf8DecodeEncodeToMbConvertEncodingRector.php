@@ -56,6 +56,12 @@ CODE_SAMPLE
             return null;
         }
 
+        // Skip if first argument uses named parameter - cannot add positional args after named args
+        $firstArg = $node->args[0] ?? null;
+        if ($firstArg instanceof Arg && $firstArg->name !== null) {
+            return null;
+        }
+
         if ($this->isName($node, 'utf8_decode')) {
             $node->name = new Name('mb_convert_encoding');
             $node->args[1] = new Arg(new String_('ISO-8859-1'));
