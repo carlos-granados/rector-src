@@ -66,6 +66,13 @@ final class FilesystemIteratorSkipDotsRector extends AbstractRector implements M
             return null;
         }
 
+        // Skip if any argument uses named parameter - positional access would be incorrect
+        foreach ($node->args as $arg) {
+            if ($arg instanceof Arg && $arg->name !== null) {
+                return null;
+            }
+        }
+
         $flags = $node->getArgs()[1]
             ->value;
         if ($this->isSkipDotsPresent($flags)) {
