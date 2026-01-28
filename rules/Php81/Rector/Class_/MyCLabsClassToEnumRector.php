@@ -9,6 +9,7 @@ use PhpParser\Node\Stmt\Class_;
 use PHPStan\Type\ObjectType;
 use Rector\Php81\NodeFactory\EnumFactory;
 use Rector\Rector\AbstractRector;
+use Rector\ValueObject\MethodName;
 use Rector\ValueObject\PhpVersionFeature;
 use Rector\VersionBonding\Contract\MinPhpVersionInterface;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -64,6 +65,14 @@ CODE_SAMPLE
     public function refactor(Node $node): ?Node
     {
         if (! $this->isObjectType($node, new ObjectType('MyCLabs\Enum\Enum'))) {
+            return null;
+        }
+
+        if ($node->getProperties() !== []) {
+            return null;
+        }
+
+        if ($node->getMethod(MethodName::CONSTRUCT) !== null) {
             return null;
         }
 
