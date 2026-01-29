@@ -23,6 +23,7 @@ use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
 use Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTagRemover;
 use Rector\Comments\NodeDocBlock\DocBlockUpdater;
+use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\PhpAttribute\NodeFactory\PhpAttributeGroupFactory;
 
@@ -43,11 +44,17 @@ final readonly class DeprecatedAnnotationToDeprecatedAttributeConverter
         private PhpAttributeGroupFactory $phpAttributeGroupFactory,
         private DocBlockUpdater $docBlockUpdater,
         private PhpDocInfoFactory $phpDocInfoFactory,
+        private NodeNameResolver $nodeNameResolver,
     ) {
     }
 
     public function convert(ClassConst|Function_|ClassMethod|Const_|Trait_ $node): ?Node
     {
+        // Skip if already has #[\Deprecated] attribute
+        if ($this->hasDeprecatedAttribute($node)) {
+            return null;
+        }
+
         $hasChanged = false;
         $phpDocInfo = $this->phpDocInfoFactory->createFromNode($node);
         if ($phpDocInfo instanceof PhpDocInfo) {
@@ -126,5 +133,18 @@ final readonly class DeprecatedAnnotationToDeprecatedAttributeConverter
         }
 
         return $hasChanged;
+    }
+
+    private function hasDeprecatedAttribute(ClassConst|Function_|ClassMethod|Const_|Trait_ $node): bool
+    {
+        foreach ($node->attrGroups as $attrGroup) {
+            foreach ($attrGroup->attrs as $attribute) {
+                if ($this->nodeNameResolver->isName($attribute->name, 'Deprecated')) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }
