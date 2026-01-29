@@ -9,6 +9,8 @@ use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
 use PhpParser\Node\VarLikeIdentifier;
+use PHPStan\Reflection\ClassReflection;
+use Rector\PHPStan\ScopeFetcher;
 use Rector\Rector\AbstractRector;
 use Rector\ValueObject\PhpVersionFeature;
 use Rector\VersionBonding\Contract\MinPhpVersionInterface;
@@ -73,6 +75,17 @@ final class RemoveGetClassGetParentClassNoArgsRector extends AbstractRector impl
         }
 
         if ($this->isName($node, 'get_parent_class')) {
+            // Skip if class has no parent - get_parent_class() returns false, but parent::class would be fatal
+            $scope = ScopeFetcher::fetch($node);
+            $classReflection = $scope->getClassReflection();
+            if (! $classReflection instanceof ClassReflection) {
+                return null;
+            }
+
+            if ($classReflection->getParentClass() === null) {
+                return null;
+            }
+
             $target = 'parent';
         }
 
