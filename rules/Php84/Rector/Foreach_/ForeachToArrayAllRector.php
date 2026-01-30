@@ -272,6 +272,11 @@ CODE_SAMPLE
 
         $ifStmt = $foreach->stmts[0];
 
+        // skip if has else or elseif branches
+        if ($ifStmt->elseifs !== [] || $ifStmt->else !== null) {
+            return false;
+        }
+
         if (count($ifStmt->stmts) !== 1) {
             return false;
         }
@@ -311,6 +316,11 @@ CODE_SAMPLE
             ! $firstStmt instanceof If_ ||
             count($firstStmt->stmts) !== 2
         ) {
+            return false;
+        }
+
+        // skip if has else or elseif branches
+        if ($firstStmt->elseifs !== [] || $firstStmt->else !== null) {
             return false;
         }
 
