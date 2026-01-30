@@ -7,7 +7,6 @@ namespace Rector\Transform\Rector\Class_;
 use PhpParser\Node;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Stmt\Interface_;
 use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
@@ -103,7 +102,6 @@ CODE_SAMPLE
     private function makeImplementsUnique(Class_ $class): void
     {
         $alreadyAddedNames = [];
-        /** @var array<int, Interface_> $implements */
         $implements = $class->implements;
 
         foreach ($implements as $key => $name) {
