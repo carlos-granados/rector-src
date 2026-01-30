@@ -139,6 +139,11 @@ CODE_SAMPLE
                 return null;
             }
 
+            // Skip named arguments - pipe operator passes value as first positional argument
+            if ($arg->name !== null) {
+                return null;
+            }
+
             if ($currentIndex === $startIndex) {
 
                 // First in chain - must be a variable or simple value
