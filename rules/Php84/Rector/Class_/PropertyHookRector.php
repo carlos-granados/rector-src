@@ -9,6 +9,7 @@ use PhpParser\Node;
 use PhpParser\Node\PropertyHook;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Property;
 use Rector\Configuration\Parameter\FeatureFlags;
 use Rector\Php84\NodeFactory\PropertyHookFactory;
 use Rector\Php84\NodeFinder\SetterAndGetterFinder;
@@ -134,7 +135,11 @@ CODE_SAMPLE
                     $property->flags = Modifiers::PUBLIC;
                 }
 
-                $property->hooks[] = $propertyHook;
+                // only add hook if it doesn't already exist
+                if (! $this->hasHook($property, $propertyHook->name->toString())) {
+                    $property->hooks[] = $propertyHook;
+                }
+
                 $classMethodsToRemove[] = $candidateClassMethod;
             }
         }
@@ -172,5 +177,16 @@ CODE_SAMPLE
 
         $magicSetMethod = $class->getMethod(MethodName::__SET);
         return $magicSetMethod instanceof ClassMethod;
+    }
+
+    private function hasHook(Property $property, string $hookName): bool
+    {
+        foreach ($property->hooks as $hook) {
+            if ($hook->name->toString() === $hookName) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
