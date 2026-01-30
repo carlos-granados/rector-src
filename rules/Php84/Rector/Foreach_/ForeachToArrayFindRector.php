@@ -174,6 +174,11 @@ CODE_SAMPLE
             return false;
         }
 
+        // skip if has else or elseif branches
+        if ($firstStmt->elseifs !== [] || $firstStmt->else !== null) {
+            return false;
+        }
+
         $assignmentStmt = $firstStmt->stmts[0];
         $breakStmt = $firstStmt->stmts[1];
 
