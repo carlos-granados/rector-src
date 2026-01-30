@@ -95,7 +95,9 @@ CODE_SAMPLE
 
         $classMethod->params[] = $param;
 
-        $classMethod->stmts = [$this->assignProperties()];
+        // Preserve existing __wakeup statements after property assignment
+        $existingStmts = $classMethod->stmts ?? [];
+        $classMethod->stmts = array_merge([$this->assignProperties()], $existingStmts);
 
         return $node;
     }

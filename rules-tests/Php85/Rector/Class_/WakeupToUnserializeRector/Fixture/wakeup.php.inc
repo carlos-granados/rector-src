@@ -28,6 +28,7 @@ class User {
                 $this->{$property} = $value;
             }
         }
+        $this->id = 1;
     }
 }
 ?>
