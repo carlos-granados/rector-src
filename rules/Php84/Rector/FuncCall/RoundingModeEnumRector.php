@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Rector\Php84\Rector\FuncCall;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\Name\FullyQualified;
 use Rector\Rector\AbstractRector;
 use Rector\ValueObject\PhpVersionFeature;
@@ -22,7 +24,7 @@ final class RoundingModeEnumRector extends AbstractRector implements MinPhpVersi
 {
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Replace rounding mode constant to RoundMode enum in `round()`', [
+        return new RuleDefinition('Replace rounding mode constant to RoundMode enum in \`round()\`', [
             new CodeSample(
                 <<<'CODE_SAMPLE'
 round(1.5, 0, PHP_ROUND_HALF_UP);
@@ -46,7 +48,6 @@ CODE_SAMPLE
      */
     public function refactor(Node $node): ?FuncCall
     {
-
         if (! $this->isName($node, 'round')) {
             return null;
         }
@@ -57,39 +58,43 @@ CODE_SAMPLE
 
         $args = $node->getArgs();
 
-        if (count($args) !== 3) {
-            return null;
-        }
-
-        if (! isset($args[2])) {
-            return null;
-        }
-
-        $modeArg = $args[2]->value;
-
-        $hasChanged = false;
-        if ($modeArg instanceof ConstFetch) {
-            $enumCase = match ($modeArg->name->toString()) {
-                'PHP_ROUND_HALF_UP' => 'HalfAwayFromZero',
-                'PHP_ROUND_HALF_DOWN' => 'HalfTowardsZero',
-                'PHP_ROUND_HALF_EVEN' => 'HalfEven',
-                'PHP_ROUND_HALF_ODD' => 'HalfOdd',
-                default => null,
-            };
-
-            if ($enumCase === null) {
-                return null;
+        // Find mode argument by name first, then by position
+        $modeArg = null;
+        foreach ($args as $arg) {
+            if ($arg->name instanceof Identifier && $arg->name->toString() === 'mode') {
+                $modeArg = $arg;
+                break;
             }
-
-            $args[2]->value = new ClassConstFetch(new FullyQualified('RoundingMode'), $enumCase);
-            $hasChanged = true;
         }
 
-        if ($hasChanged) {
-            return $node;
+        // Fall back to positional argument at index 2
+        if ($modeArg === null && isset($args[2])) {
+            $modeArg = $args[2];
         }
 
-        return null;
+        if (! $modeArg instanceof Arg) {
+            return null;
+        }
+
+        if (! $modeArg->value instanceof ConstFetch) {
+            return null;
+        }
+
+        $enumCase = match ($modeArg->value->name->toString()) {
+            'PHP_ROUND_HALF_UP' => 'HalfAwayFromZero',
+            'PHP_ROUND_HALF_DOWN' => 'HalfTowardsZero',
+            'PHP_ROUND_HALF_EVEN' => 'HalfEven',
+            'PHP_ROUND_HALF_ODD' => 'HalfOdd',
+            default => null,
+        };
+
+        if ($enumCase === null) {
+            return null;
+        }
+
+        $modeArg->value = new ClassConstFetch(new FullyQualified('RoundingMode'), $enumCase);
+
+        return $node;
     }
 
     public function provideMinPhpVersion(): int
