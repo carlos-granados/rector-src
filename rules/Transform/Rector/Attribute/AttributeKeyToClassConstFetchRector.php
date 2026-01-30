@@ -159,6 +159,11 @@ CODE_SAMPLE
 
     private function processArg(Arg $arg, AttributeKeyToClassConstFetch $attributeKeyToClassConstFetch): bool
     {
+        // Skip if already using any class constant - user has already upgraded from string literal
+        if ($arg->value instanceof ClassConstFetch) {
+            return false;
+        }
+
         $value = $this->valueResolver->getValue($arg->value);
 
         $constName = $attributeKeyToClassConstFetch->getValuesToConstantsMap()[$value] ?? null;
@@ -170,13 +175,6 @@ CODE_SAMPLE
             $attributeKeyToClassConstFetch->getConstantClass(),
             $constName
         );
-
-        if (
-            $arg->value instanceof ClassConstFetch
-            && $this->getName($arg->value) === $this->getName($classConstFetch)
-        ) {
-            return false;
-        }
 
         $arg->value = $classConstFetch;
 
