@@ -270,6 +270,11 @@ CODE_SAMPLE
             return false;
         }
 
+        // skip if has else or elseif branches
+        if ($firstStmt->elseifs !== [] || $firstStmt->else !== null) {
+            return false;
+        }
+
         $assignmentStmt = $firstStmt->stmts[0];
         $breakStmt = $firstStmt->stmts[1];
 
@@ -307,6 +312,11 @@ CODE_SAMPLE
         }
 
         $ifStmt = $foreach->stmts[0];
+
+        // skip if has else or elseif branches
+        if ($ifStmt->elseifs !== [] || $ifStmt->else !== null) {
+            return false;
+        }
 
         if (count($ifStmt->stmts) !== 1) {
             return false;
