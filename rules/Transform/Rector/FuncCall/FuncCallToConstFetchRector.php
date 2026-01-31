@@ -20,7 +20,7 @@ use Webmozart\Assert\Assert;
 final class FuncCallToConstFetchRector extends AbstractRector implements ConfigurableRectorInterface
 {
     /**
-     * @var string[]
+     * @var array<string, string>
      */
     private array $functionsToConstants = [];
 
@@ -74,11 +74,12 @@ CODE_SAMPLE
             return null;
         }
 
-        if (! array_key_exists($functionName, $this->functionsToConstants)) {
+        $lowercaseFunctionName = strtolower($functionName);
+        if (! array_key_exists($lowercaseFunctionName, $this->functionsToConstants)) {
             return null;
         }
 
-        return new ConstFetch(new Name($this->functionsToConstants[$functionName]));
+        return new ConstFetch(new Name($this->functionsToConstants[$lowercaseFunctionName]));
     }
 
     /**
@@ -89,7 +90,9 @@ CODE_SAMPLE
         Assert::allString($configuration);
         Assert::allString(array_keys($configuration));
 
-        /** @var array<string, string> $configuration */
-        $this->functionsToConstants = $configuration;
+        // Store with lowercase keys for case-insensitive lookup
+        foreach ($configuration as $functionName => $constantName) {
+            $this->functionsToConstants[strtolower($functionName)] = $constantName;
+        }
     }
 }
