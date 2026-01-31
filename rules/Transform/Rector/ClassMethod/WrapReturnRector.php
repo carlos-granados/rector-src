@@ -8,9 +8,12 @@ use PhpParser\Node;
 use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
+use PhpParser\Node\Expr\ArrowFunction;
+use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Return_;
+use PhpParser\NodeVisitor;
 use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
 use Rector\Transform\ValueObject\WrapReturn;
@@ -115,13 +118,20 @@ CODE_SAMPLE
         }
 
         $hasChanged = false;
-        foreach ($classMethod->stmts as $stmt) {
-            if ($stmt instanceof Return_ && $stmt->expr instanceof Expr
-                && ! $stmt->expr instanceof Array_) {
-                $stmt->expr = new Array_([new ArrayItem($stmt->expr)]);
+
+        $this->traverseNodesWithCallable($classMethod->stmts, function (Node $node) use (&$hasChanged): ?int {
+            // Skip closures and arrow functions - their returns are not part of this method
+            if ($node instanceof Closure || $node instanceof ArrowFunction) {
+                return NodeVisitor::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
+            }
+
+            if ($node instanceof Return_ && $node->expr instanceof Expr && ! $node->expr instanceof Array_) {
+                $node->expr = new Array_([new ArrayItem($node->expr)]);
                 $hasChanged = true;
             }
-        }
+
+            return null;
+        });
 
         return $hasChanged;
     }
