@@ -160,7 +160,7 @@ CODE_SAMPLE
         }
 
         $genericTypeNode = $extendsTagValueNode->type;
-        if ($genericTypeNode->type->name !== 'EntityRepository') {
+        if (! str_ends_with($genericTypeNode->type->name, 'EntityRepository')) {
             return null;
         }
 
