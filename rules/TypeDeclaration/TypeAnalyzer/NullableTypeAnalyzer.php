@@ -20,6 +20,10 @@ final readonly class NullableTypeAnalyzer
     {
         $exprType = $this->nodeTypeResolver->getNativeType($expr);
 
+        if (! TypeCombinator::containsNull($exprType)) {
+            return null;
+        }
+
         $baseType = TypeCombinator::removeNull($exprType);
         if (! $baseType instanceof ObjectType) {
             return null;
